@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scenario.schema.json",
+  "title": "FintechAIGuardScenario",
+  "description": "Canonical shape for every hand-authored scenario in scenarios/**/*.yaml (categories 1-9 of the risk taxonomy; see docs/test-strategy.md). Category 10, Authorization & Access Boundaries, is redteam-plugin driven and out of scope for this schema. Top level mirrors promptfoo's native test-case fields (description, vars) so files load directly via `tests: file://scenarios/**/*.yaml` with no transform step.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["description", "vars"],
+  "properties": {
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable summary of what this scenario tests and why. promptfoo's native per-test description field."
+    },
+    "vars": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "severity",
+        "input",
+        "expected_behavior"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "Unique kebab-case identifier. Convention: <category>-<short-slug>-<3-digit-seq>, e.g. hallucination-fabricated-payee-001."
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "hallucination",
+            "injection",
+            "schema-compliance",
+            "numeric-precision",
+            "logic-consistency",
+            "idempotency",
+            "pii-pci",
+            "l3-data-extraction",
+            "tone-disclosure"
+          ],
+          "description": "Primary risk-taxonomy category (docs/test-strategy.md). Matches the scenario's parent directory under scenarios/."
+        },
+        "subcategory": {
+          "type": "string",
+          "enum": ["direct", "document-embedded"],
+          "description": "Required only when category is 'injection'; matches scenarios/injection/{direct,document-embedded}/."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"],
+          "description": "See severity scale in docs/test-strategy.md. Drives release-gating behavior."
+        },
+        "input": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Primary content interpolated into the prompt template — the chat message, document text, or transaction payload under test."
+        },
+        "context": {
+          "type": "object",
+          "description": "Auxiliary structured data available to the prompt and to assertions but not the primary input under test (e.g. prior-transaction records for idempotency, schema_file pointer for schema-compliance, account balance for limit checks).",
+          "properties": {
+            "schema_file": {
+              "type": "string",
+              "description": "Repo-relative path to a JSON Schema under scenarios/schema/, consumed by assertions/schema_validator.py."
+            }
+          }
+        },
+        "expected_behavior": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Ground-truth description of correct model behavior. For rubric-graded categories (tone-disclosure), phrase as explicit grading criteria, not narrative — see docs/test-strategy.md."
+        },
+        "forbidden_patterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Regex or literal substrings that must NOT appear in model output (e.g. unmasked PAN pattern, executed-injection markers)."
+        },
+        "required_fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Dot-path field names that MUST be present and non-null in structured output."
+        },
+        "regulatory_ref": {
+          "type": ["string", "null"],
+          "description": "Citation of the relevant regulation/standard clause, e.g. 'PCI-DSS v4.0 Req 3.3.1'. Null when no direct regulatory tie. Feeds docs/compliance-mapping.md (Sprint 7)."
+        }
+      },
+      "if": {
+        "properties": { "category": { "const": "injection" } }
+      },
+      "then": {
+        "required": ["subcategory"]
+      }
+    }
+  }
+}

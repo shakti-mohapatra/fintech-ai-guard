@@ -22,9 +22,9 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Register fintech-ai-guard in Mission Control's projects.json
 - [x] Copy the full design plan into docs/plan.md so any AI tool can resume the project, not just the one that started it
 
-## Sprint 2 — Risk Taxonomy & Ground-Truth Schema
-- [ ] Write docs/test-strategy.md defining the 10-category risk taxonomy
-- [ ] Define the canonical scenario YAML schema (id, category, severity, description, input/context, expected_behavior, forbidden_patterns, required_fields, regulatory_ref)
+## Sprint 2 — Risk Taxonomy & Ground-Truth Schema ✅
+- [x] Write docs/test-strategy.md defining the 10-category risk taxonomy
+- [x] Define the canonical scenario YAML schema (id, category, severity, description, input/context, expected_behavior, forbidden_patterns, required_fields, regulatory_ref)
 
 ## Sprint 3 — Scenario + Assertion Authoring
 - [ ] Author hallucination scenarios and their assertion

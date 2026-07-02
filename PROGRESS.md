@@ -2,6 +2,30 @@
 
 A running log so multi-day work is easy to pick back up. Newest entry on top.
 
+## 2026-07-02 — Sprint 2: Risk Taxonomy & Ground-Truth Schema ✅
+
+**Latest commit:** pending (this entry). Issues #10, #11 closed; Sprint 2 milestone closed (0 open / 2 closed).
+
+### What shipped
+
+| What | Detail |
+|------|--------|
+| `docs/test-strategy.md` | Full 10-category risk taxonomy: per-category definition, concrete failure example, ground-truth mechanism, assertion file (planned), and QA metric fed. Plus a general ground-truth methodology section (deterministic vs. reference-anchored vs. rubric-graded, and when to reach for each), a 4-level severity scale (critical/high/medium/low) tied to release gating, a coverage matrix, and scenario-authoring principles for Sprint 3 |
+| `scenarios/scenario.schema.json` | Canonical JSON Schema (draft-07, matching `transfer_request.schema.json`'s draft) for every `scenarios/**/*.yaml` file. Top level mirrors promptfoo's native `description`/`vars` fields — scenario files load straight into `tests: file://scenarios/**/*.yaml` with no transform step |
+| `docs/scenario-schema.md` | Field-by-field reference for the schema, `category` ↔ directory mapping table, three fully annotated example scenarios (hallucination, document-embedded injection, schema-compliance) |
+| `tests/test_scenario_schema.py` | 14 pytest cases: schema self-validates as draft-07, valid scenarios pass, missing/invalid required fields fail, the `injection` → `subcategory` conditional requirement is enforced both ways, all 9 taxonomy categories accepted, category 10 (`authorization`) correctly rejected since it's redteam-driven, not YAML-authored |
+
+### Design decisions
+- **Category enum has 9 values, not 10.** Category 10 (Authorization & Access Boundaries) needs a real callable target to probe a real authorization boundary — it's driven by `promptfoo redteam`'s BFLA/BOLA plugins against `mock_api/` in Sprint 8, not hand-authored YAML. Documented explicitly in both `docs/test-strategy.md` and the schema's `$id` description so this isn't rediscovered as a "bug" later.
+- **`assert:` is deliberately not part of the canonical scenario schema.** Assertion wiring is centralized per-category in Sprint 4 rather than hand-written per scenario, keeping Sprint 3 authoring focused on the risk case. The schema's `additionalProperties: false` at the top level makes any future per-scenario `assert:` override a validation failure until explicitly revisited, rather than something that silently drifts in.
+- **`injection` uses a conditional `subcategory` requirement** (JSON Schema `if`/`then`) rather than splitting into two categories (`injection-direct` / `injection-document-embedded`), so `category` stays a clean 1:1 map to the risk taxonomy's numbered list while still distinguishing the two existing scenario subdirectories.
+- Reused draft-07 (not draft 2020-12) for the new schema to stay consistent with the existing `transfer_request.schema.json` / `schema_validator.py` pair from Sprint 0, since both will eventually be validated with the same `jsonschema` library idiom in this repo.
+
+### Verification
+- `pytest tests/ -v` → 27/27 passed (13 pre-existing + 14 new) ✓
+
+**Next:** Sprint 3 — scenario + assertion authoring, starting with hallucination and injection (the two categories with no domain-specific edge cases needed yet). Business-logic-consistency, PII/PCI, and L3 extraction scenarios need the user's Verifone/Geidea/L3 payments-QA specifics checked in on before authoring — see `docs/test-strategy.md` § Scenario authoring principles.
+
 ## 2026-07-02 — Session wrap-up: plan made portable, pausing before Sprint 2
 
 **Latest commit:** pending (this entry).
