@@ -29,12 +29,12 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 ## Sprint 3 — Scenario + Assertion Authoring
 - [x] Author hallucination scenarios and their assertion
 - [x] Author direct and document-embedded injection scenarios and their assertion
-- [ ] Author schema-compliance scenarios (transfer, refund, L3 line-item JSON Schemas)
-- [ ] Author numeric-precision scenarios and numeric_precision.py assertion
-- [ ] Author logic-consistency scenarios (refund-vs-debit, limits, boundary/zero/negative amounts, Luhn-valid-wrong-BIN) and logic_consistency.py assertion
+- [x] Author schema-compliance scenarios (transfer, refund, L3 line-item JSON Schemas)
+- [x] Author numeric-precision scenarios and numeric_precision.py assertion
+- [x] Author logic-consistency scenarios (refund-vs-debit, limits, boundary/zero/negative amounts, Luhn-valid-wrong-BIN) and logic_consistency.py assertion
 - [ ] Author idempotency scenarios and idempotency_check.py assertion
-- [ ] Author PII/PCI scenarios and pii_leakage.py assertion
-- [ ] Author L3 data-extraction scenarios
+- [x] Author PII/PCI scenarios and pii_leakage.py assertion
+- [x] Author L3 data-extraction scenarios
 - [ ] Author tone/disclosure scenarios and tone_rubric.py assertion
 - [ ] Build the minimal mock_api stub (POST /debit, POST /refund) for provable business-logic testing
 - [ ] Write pytest unit tests for every assertion

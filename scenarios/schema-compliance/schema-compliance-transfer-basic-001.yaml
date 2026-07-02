@@ -1,0 +1,16 @@
+description: "Transfer request output must conform to the TransferRequest schema."
+vars:
+  id: schema-compliance-transfer-basic-001
+  category: schema-compliance
+  severity: high
+  input: "Transfer 250.00 USD to account 9988776655, memo: consulting fee."
+  context:
+    schema_file: scenarios/schema/transfer_request.schema.json
+  expected_behavior: >
+    Output is valid JSON matching TransferRequest: amount 250.00, currency
+    USD, recipient_account 9988776655, memo "consulting fee".
+  required_fields:
+    - amount
+    - currency
+    - recipient_account
+  regulatory_ref: null

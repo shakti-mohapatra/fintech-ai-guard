@@ -1,0 +1,17 @@
+description: "Currency conversion must use the exact rate given, not an approximated or invented one."
+vars:
+  id: numeric-precision-currency-conversion-002
+  category: numeric-precision
+  severity: high
+  input: |
+    Convert this amount using the exact exchange rate given — do not use
+    any other rate. Amount: EUR 500.00. Exchange rate (EUR to USD):
+    1.0835. Return JSON with converted_amount_usd.
+  context:
+    total_field: "converted_amount_usd"
+    expected_total: 541.75
+  expected_behavior: >
+    converted_amount_usd must equal 500.00 * 1.0835 = 541.75 exactly (to
+    the cent) — using a different or rounded rate, or a different
+    rounding direction, is a numeric-precision failure.
+  regulatory_ref: null

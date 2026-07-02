@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "transaction_action.schema.json",
+  "title": "TransactionAction",
+  "description": "A business-logic decision on a transaction request: what action was taken and why. Shared by refund schema-compliance and logic-consistency scenarios (docs/test-strategy.md categories 3 and 5).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action", "reason_code"],
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": ["debit", "refund", "hold", "reject"]
+    },
+    "amount": {
+      "type": "number",
+      "description": "The amount from the request being decided on. Not constrained to be positive — a rejected negative/zero amount may still be echoed here for diagnostics."
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code."
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Machine-readable explanation for the chosen action, e.g. DAILY_LIMIT_EXCEEDED, BIN_MISMATCH, DUPLICATE_SUBMISSION, INVALID_AMOUNT."
+    },
+    "reference_id": {
+      "type": "string"
+    }
+  }
+}

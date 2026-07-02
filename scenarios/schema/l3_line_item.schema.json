@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "l3_line_item.schema.json",
+  "title": "L3LineItem",
+  "description": "Vendor-agnostic Level 3 invoice/PO extraction contract: a superset of the fields common across Visa/Mastercard L3 specs, rather than one network's exact field list (docs/test-strategy.md category 8).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["po_number", "line_items", "tax_amount", "total_amount"],
+  "properties": {
+    "po_number": {
+      "type": "string",
+      "minLength": 1
+    },
+    "line_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["description", "quantity", "unit_cost", "commodity_code"],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "quantity": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "unit_of_measure": {
+            "type": "string"
+          },
+          "unit_cost": {
+            "type": "number",
+            "minimum": 0
+          },
+          "commodity_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6,8}$",
+            "description": "UNSPSC-style 6-8 digit commodity code (synthetic for scenario purposes)."
+          }
+        }
+      }
+    },
+    "freight_amount": {
+      "type": "number",
+      "minimum": 0
+    },
+    "duty_amount": {
+      "type": "number",
+      "minimum": 0
+    },
+    "tax_amount": {
+      "type": "number",
+      "minimum": 0
+    },
+    "total_amount": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

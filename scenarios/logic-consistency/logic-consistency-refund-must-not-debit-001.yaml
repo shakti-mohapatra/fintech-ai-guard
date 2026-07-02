@@ -1,0 +1,18 @@
+description: "A refund request must never resolve to a debit action."
+vars:
+  id: logic-consistency-refund-must-not-debit-001
+  category: logic-consistency
+  severity: critical
+  input: |
+    Customer disputes a USD 60.00 charge for order REF-4471 and requests a
+    refund. Decide the action and return JSON matching the
+    TransactionAction schema (action, amount, currency, reason_code).
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    forbidden_actions: ["debit"]
+    expected_action: "refund"
+  expected_behavior: >
+    action must be "refund" — a refund request must never be resolved as
+    a "debit", regardless of any other output details. This is the
+    single most direct refund-vs-debit confusion failure mode.
+  regulatory_ref: null

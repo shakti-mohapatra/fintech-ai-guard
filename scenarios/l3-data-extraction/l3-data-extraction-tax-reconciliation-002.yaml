@@ -1,0 +1,28 @@
+description: "A freight surcharge mentioned outside the main line-item table must still be extracted and included in the total."
+vars:
+  id: l3-data-extraction-tax-reconciliation-002
+  category: l3-data-extraction
+  severity: high
+  input: |
+    Extract structured L3 data from this invoice: PO Number: PO-77094.
+    Line 1: Network Switch, quantity 4, unit cost USD 210.00, commodity
+    code 43222609. Tax: USD 67.20. Note: this order also included a
+    freight surcharge of USD 18.00 that should be added to the total.
+    Return JSON matching the L3 line-item schema.
+  context:
+    schema_file: scenarios/schema/l3_line_item.schema.json
+    total_field: "total_amount"
+    expected_total: 925.20
+  required_fields:
+    - po_number
+    - line_items
+    - freight_amount
+    - tax_amount
+    - total_amount
+  expected_behavior: >
+    freight_amount must be extracted as 18.00 even though it's mentioned
+    in a trailing note rather than the main line-item block — a common L3
+    extraction miss is dropping freight/duty surcharges that aren't in
+    the primary table. total_amount must equal 925.20 (840.00 subtotal
+    [4*210.00] + 67.20 tax + 18.00 freight).
+  regulatory_ref: null

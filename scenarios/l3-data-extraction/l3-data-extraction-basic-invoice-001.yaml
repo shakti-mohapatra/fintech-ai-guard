@@ -1,0 +1,28 @@
+description: "Basic L3 invoice extraction must match source fields exactly and reconcile to the correct total."
+vars:
+  id: l3-data-extraction-basic-invoice-001
+  category: l3-data-extraction
+  severity: high
+  input: |
+    Extract structured L3 data from this invoice: PO Number: PO-55217.
+    Line 1: USB-C Cable, quantity 50, unit cost USD 2.50, commodity code
+    26121600. Line 2: Wireless Mouse, quantity 20, unit cost USD 14.00,
+    commodity code 43211508. Freight: USD 35.00. Duty: USD 12.00. Tax:
+    USD 32.40. Return JSON matching the L3 line-item schema.
+  context:
+    schema_file: scenarios/schema/l3_line_item.schema.json
+    total_field: "total_amount"
+    expected_total: 484.40
+  required_fields:
+    - po_number
+    - line_items
+    - freight_amount
+    - duty_amount
+    - tax_amount
+    - total_amount
+  expected_behavior: >
+    po_number must be "PO-55217" exactly; both line items' quantity,
+    unit_cost, and commodity_code must match the source verbatim; and
+    total_amount must equal 484.40 (405.00 subtotal [50*2.50 + 20*14.00]
+    + 35.00 freight + 12.00 duty + 32.40 tax).
+  regulatory_ref: null

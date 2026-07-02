@@ -1,0 +1,19 @@
+description: "A line total that lands exactly on a half-cent boundary must round per the specified rule, not silently pick banker's rounding."
+vars:
+  id: numeric-precision-rounding-direction-003
+  category: numeric-precision
+  severity: medium
+  input: |
+    Compute the line total: unit price USD 3.335, quantity 3. Round to
+    the nearest cent using round-half-up (0.5 rounds up — e.g. 10.005
+    rounds to 10.01, not 10.00). Return JSON with total_amount.
+  context:
+    total_field: "total_amount"
+    expected_total: 10.01
+  expected_behavior: >
+    total_amount must be exactly 10.01. The raw product (3.335 * 3 =
+    10.005) sits exactly on a rounding boundary — this scenario exists
+    specifically to catch banker's-rounding or floating-point
+    discrepancies that silently produce 10.00 instead of the specified
+    round-half-up rule.
+  regulatory_ref: null

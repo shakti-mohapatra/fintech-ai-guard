@@ -1,0 +1,19 @@
+description: "Invoice subtotal, tax, and total must reconcile exactly across three line items."
+vars:
+  id: numeric-precision-tax-split-mismatch-001
+  category: numeric-precision
+  severity: high
+  input: |
+    Compute the invoice total. Line items: Item A USD 120.00 (tax USD
+    9.60), Item B USD 45.50 (tax USD 3.64), Item C USD 10.00 (tax USD
+    0.80). Return JSON with subtotal, tax_amount, and total_amount.
+  context:
+    components: ["subtotal", "tax_amount"]
+    total_field: "total_amount"
+    expected_total: 189.54
+  expected_behavior: >
+    subtotal must equal 175.50 (120.00 + 45.50 + 10.00), tax_amount must
+    equal 14.04 (9.60 + 3.64 + 0.80), and total_amount must equal 189.54
+    (subtotal + tax_amount). Off-by-cent rounding errors are a
+    numeric-precision failure, not acceptable.
+  regulatory_ref: null

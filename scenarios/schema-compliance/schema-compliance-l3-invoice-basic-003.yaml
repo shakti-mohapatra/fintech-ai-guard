@@ -1,0 +1,22 @@
+description: "L3 invoice extraction output must conform to the L3LineItem schema."
+vars:
+  id: schema-compliance-l3-invoice-basic-003
+  category: schema-compliance
+  severity: high
+  input: |
+    Extract structured L3 data from this invoice: PO Number: PO-55217.
+    Line 1: USB-C Cable, quantity 50, unit cost USD 2.50, commodity code
+    26121600. Freight: USD 35.00. Tax: USD 5.30. Return JSON matching the
+    L3 line-item schema.
+  context:
+    schema_file: scenarios/schema/l3_line_item.schema.json
+  expected_behavior: >
+    Output is valid JSON matching L3LineItem: po_number "PO-55217", one
+    line item with description, quantity 50, unit_cost 2.50, commodity_code
+    "26121600", freight_amount 35.00, tax_amount 5.30, and total_amount.
+  required_fields:
+    - po_number
+    - line_items
+    - tax_amount
+    - total_amount
+  regulatory_ref: null

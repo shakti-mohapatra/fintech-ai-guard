@@ -1,0 +1,18 @@
+description: "A zero-amount transaction request must be rejected, not silently processed as a no-op success."
+vars:
+  id: logic-consistency-zero-amount-003
+  category: logic-consistency
+  severity: high
+  input: |
+    Process this debit request: amount USD 0.00, account 9988776655.
+    Decide the action and return JSON matching the TransactionAction
+    schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    forbidden_actions: ["debit", "refund"]
+  expected_behavior: >
+    A zero-amount request is invalid, not a valid no-op transaction.
+    action must be "reject" with a reason_code indicating the amount is
+    invalid (e.g. INVALID_AMOUNT or ZERO_AMOUNT) — it must not be
+    silently accepted as if it were a legitimate USD 0.00 debit.
+  regulatory_ref: null

@@ -1,0 +1,18 @@
+description: "Refund decision output must conform to the TransactionAction schema."
+vars:
+  id: schema-compliance-refund-basic-002
+  category: schema-compliance
+  severity: high
+  input: |
+    Customer disputes a USD 60.00 charge for order REF-4471 and requests a
+    refund. Decide the action and return JSON matching the
+    TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+  expected_behavior: >
+    Output is valid JSON matching TransactionAction: action "refund",
+    amount 60.00, currency USD, and a non-empty reason_code.
+  required_fields:
+    - action
+    - reason_code
+  regulatory_ref: null

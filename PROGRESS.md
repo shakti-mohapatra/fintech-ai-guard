@@ -2,6 +2,49 @@
 
 A running log so multi-day work is easy to pick back up. Newest entry on top.
 
+## 2026-07-02 — Sprint 3 (partial): domain-specific categories — schema-compliance, numeric-precision, logic-consistency, PII/PCI, L3-extraction
+
+**Latest commit:** pending (this entry). Issues #14, #15, #16, #18, #19 closed. Sprint 3 milestone: 7 of 11 tasks done (idempotency, tone/disclosure, mock_api stub remain).
+
+Before authoring, checked in with the user on the parameters that needed
+payments-QA judgment rather than being invented unilaterally (per the
+project's standing convention). Approved parameters:
+- **Logic-consistency:** structured `action`/`reason_code` JSON contract;
+  illustrative synthetic limits ($2,500/txn, $10,000/day), explicitly
+  labeled as fabricated; "Luhn-valid-wrong-BIN" defined as claimed-brand
+  vs. actual-BIN-range mismatch (or an unassigned/reserved range), using
+  published test-only card numbers (4242.../5555...), never real BINs.
+- **PII/PCI:** PCI-DSS Req 3.3 truncated-display masking (first 6 + last
+  4 visible, middle masked) rather than last-4-only; CVV never appears in
+  output under any circumstance (non-negotiable); track data/PIN blocks
+  also explicitly forbidden.
+- **L3-extraction:** vendor-agnostic field superset (PO number, line
+  items, freight, duty, tax, commodity code) rather than one card
+  network's exact spec; synthetic-but-plausible commodity codes.
+
+### What shipped
+
+| What | Detail |
+|------|--------|
+| `scenarios/schema/transaction_action.schema.json`, `l3_line_item.schema.json` | Two new JSON Schemas — prerequisites for logic-consistency and L3-extraction, also used by 2 of the 3 new schema-compliance scenarios |
+| `scenarios/schema-compliance/*.yaml` (3 files) | transfer, refund, L3-invoice — all reuse the existing `schema_validator.py` from Sprint 0, no new assertion code needed |
+| `assertions/numeric_precision.py` + `scenarios/numeric-precision/*.yaml` (3 files) | Checks a structured output field against a scenario's precomputed `expected_total` and/or internal component-sum consistency, within a currency-aware epsilon. Scenarios: tax-split summation across 3 line items, currency-conversion rate fidelity, a rounding-direction boundary case (3.335 × 3 = 10.005, exactly on the round-half-up/banker's-rounding fence) |
+| `assertions/logic_consistency.py` + `scenarios/logic-consistency/*.yaml` (5 files) | Parses the `action`/`reason_code` JSON contract, checks against scenario-declared `forbidden_actions`/`expected_action`. Scenarios: refund-must-not-debit, daily-limit-exceeded, zero-amount, negative-amount, Luhn-valid-wrong-BIN |
+| `assertions/pii_leakage.py` + `scenarios/pii-pci/*.yaml` (3 files) | Generic Luhn-based unmasked-PAN detector (works across any scenario without per-case regex duplication) plus `forbidden_patterns` backstop for CVV/track-data/PIN-block, which have no generically detectable shape. Scenarios: masked-PAN-required in a customer message, no-CVV-storage in an internal audit log, no-track-data/PIN-block reproduction. Each cites its specific PCI-DSS requirement in `regulatory_ref` |
+| `scenarios/l3-data-extraction/*.yaml` (2 files) | Basic invoice extraction, and a tax-reconciliation scenario testing a realistic extraction-completeness trap: a freight surcharge mentioned in a trailing note rather than the main line-item table. No new assertion — reuses `schema_validator.py` + `numeric_precision.py` per `docs/test-strategy.md`'s design |
+| `tests/test_numeric_precision.py`, `test_logic_consistency.py`, `test_pii_leakage.py`, plus additions to `test_assertions.py` for the 2 new schemas | 10 + 8 + 7 + 5 new pytest cases |
+
+### Design decisions
+- **`logic_consistency.py` reads business rules from `context.forbidden_actions`/`context.expected_action`** (inside the scenario's free-form `context` object) rather than adding new top-level fields to the canonical scenario schema — the schema's `additionalProperties: false` at the `vars` level is deliberately strict, but `context` was designed open-ended for exactly this kind of category-specific extension (see `docs/scenario-schema.md`).
+- **`pii_leakage.py`'s PAN detection is generic (Luhn-based over any digit run), not per-scenario regex** — same design principle as `hallucination_check.py`: reserve `forbidden_patterns` for secrets with no generic shape (CVV, track data, PIN blocks), let one central check handle the pattern that generalizes (any unmasked, Luhn-valid card number).
+- **Caught a real bug during testing, not just a test-writing slip:** `numeric_precision.py`'s first draft used a 1-cent epsilon, which meant a $10.00 output silently passed against an expected $10.01 — a full-cent rounding error slipping through the exact category built to catch rounding errors. Tightened to a half-cent epsilon (catches any full-cent-or-larger discrepancy, tolerates float noise). Caught by `test_rounding_boundary_fails_when_wrong_direction_chosen` failing on first run.
+- **Two YAML-authoring bugs in the PII/PCI scenarios**, also caught by tests rather than assumed correct: the `forbidden_patterns` regex for CVV used a `\D{0,10}` gap tolerance that was too tight for realistic phrasing ("CVV code associated with your card is 123" has 30+ intervening characters) — widened to `\D{0,30}` in both the scenario files and the assertion tests.
+
+### Verification
+- `pytest tests/ -v` → 147 passed, 20 skipped (skips are the injection-subcategory check correctly no-op'ing on non-injection scenarios) ✓
+
+**Next:** idempotency and tone/disclosure scenarios remain in Sprint 3, plus the `mock_api` stub (POST /debit, /refund) and a final "pytest unit tests for every assertion" completeness pass (issue #22) once all assertions exist. Idempotency doesn't need further domain check-in; tone/disclosure's rubric-graded grading needs an LLM-judge, which is more naturally Sprint 4 (promptfoo provider wiring) territory — worth flagging to the user when picked up.
+
 ## 2026-07-02 — Sprint 3 (partial): hallucination + injection scenarios and assertions
 
 **Latest commit:** pending (this entry). Issues #12, #13 closed. Sprint 3 milestone still open (2 of 11 tasks done).

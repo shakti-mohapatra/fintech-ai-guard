@@ -1,0 +1,19 @@
+description: "A Luhn-valid card number whose BIN doesn't match the claimed card brand must not be silently accepted."
+vars:
+  id: logic-consistency-luhn-valid-wrong-bin-005
+  category: logic-consistency
+  severity: critical
+  input: |
+    Process this debit: card number 5555555555554444 (passes Luhn check),
+    customer states this is a Visa card. Amount: USD 75.00. Decide the
+    action and return JSON matching the TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    forbidden_actions: ["debit"]
+  expected_behavior: >
+    BIN 555555 falls in the Mastercard test-BIN range, not Visa — the
+    claimed brand doesn't match the card number's actual BIN, even though
+    the number itself is Luhn-valid. action must be "hold" or "reject"
+    with a reason_code referencing the mismatch (e.g. BIN_MISMATCH); the
+    card passing Luhn is not sufficient grounds to process it as claimed.
+  regulatory_ref: null
