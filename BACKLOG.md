@@ -1,0 +1,72 @@
+# Backlog — Fintech-AI-Guard
+
+**Agile & living.** Re-order, add, drop, or rewrite tasks freely as requirements
+change. Each task mirrors a **GitHub Issue**; each sprint mirrors a **GitHub
+Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://github.com/shakti-mohapatra/fintech-ai-guard).
+
+> Convention: `[ ]` = to do, `[~]` = partially done, `[x]` = done. When you
+> finish a task, tick it here, close the GitHub Issue, and note it in
+> `PROGRESS.md`.
+
+## Sprint 0 — Foundation & Environment ✅
+- [x] Scaffold repo directory structure (docs/, scenarios/, assertions/, tests/, mock_api/, scripts/, reports/, logs/, .github/workflows/)
+- [x] Initialize npm and install promptfoo as a devDependency
+- [x] Set up Python venv and requirements.txt (jsonschema, pydantic, pytest, faker, fastapi, tenacity, etc.)
+- [x] Add .gitignore, .env.example, MIT LICENSE, pre-commit config
+- [x] Build schema_validator.py assertion and prove the Node/Python eval pipeline end-to-end with the echo provider (no API key required)
+
+## Sprint 1 — GitHub + Mission Control Wiring ✅
+- [x] Initialize git, create the public GitHub repo, and push
+- [x] Write BACKLOG.md and PROGRESS.md in Mission Control's format
+- [x] Create GitHub milestones for every sprint and issues for every task
+- [x] Register fintech-ai-guard in Mission Control's projects.json
+
+## Sprint 2 — Risk Taxonomy & Ground-Truth Schema
+- [ ] Write docs/test-strategy.md defining the 10-category risk taxonomy
+- [ ] Define the canonical scenario YAML schema (id, category, severity, description, input/context, expected_behavior, forbidden_patterns, required_fields, regulatory_ref)
+
+## Sprint 3 — Scenario + Assertion Authoring
+- [ ] Author hallucination scenarios and their assertion
+- [ ] Author direct and document-embedded injection scenarios and their assertion
+- [ ] Author schema-compliance scenarios (transfer, refund, L3 line-item JSON Schemas)
+- [ ] Author numeric-precision scenarios and numeric_precision.py assertion
+- [ ] Author logic-consistency scenarios (refund-vs-debit, limits, boundary/zero/negative amounts, Luhn-valid-wrong-BIN) and logic_consistency.py assertion
+- [ ] Author idempotency scenarios and idempotency_check.py assertion
+- [ ] Author PII/PCI scenarios and pii_leakage.py assertion
+- [ ] Author L3 data-extraction scenarios
+- [ ] Author tone/disclosure scenarios and tone_rubric.py assertion
+- [ ] Build the minimal mock_api stub (POST /debit, POST /refund) for provable business-logic testing
+- [ ] Write pytest unit tests for every assertion
+
+## Sprint 4 — promptfoo Wiring
+- [ ] Write promptfooconfig.yaml with multi-provider support (Claude Sonnet 5, GPT-5.5, Gemini 3.1 Pro)
+- [ ] Wire PROMPTFOO_PASS_RATE_THRESHOLD for native CI gating
+- [ ] Verify promptfoo eval and promptfoo view run cleanly across the full scenario set
+
+## Sprint 5 — Reporting & Metrics
+- [ ] Write scripts/generate_report.py to compute the QA metrics table
+- [ ] Write scripts/run_eval.py as a local convenience wrapper
+- [ ] Snapshot the first curated run into reports/ and regenerate evaluation_report.md
+
+## Sprint 6 — CI/CD
+- [ ] Add .github/workflows/eval.yml using promptfoo/promptfoo-action
+- [ ] Configure GitHub Actions repo secrets for provider API keys
+
+## Sprint 7 — Documentation Polish
+- [ ] Write the README as a technical spec with real metrics and an architecture diagram
+- [ ] Write docs/architecture.md
+- [ ] Write docs/compliance-mapping.md (assertion -> PCI-DSS clause mapping)
+- [ ] Write docs/metrics.md including the cross-run consistency methodology
+- [ ] Add the synthetic-data-only disclaimer to README and docs
+
+## Sprint 8 — Red-Teaming
+- [ ] Wire promptfoo redteam for injection, jailbreak, PII, and excessive-agency plugins
+- [ ] Wire BFLA/BOLA redteam plugins against the mock API
+- [ ] Document red-team findings in a dedicated report section
+
+## Sprint 9 — Full Agentic Mock-API Buildout
+- [ ] Expand mock_api with balance checks and multi-step transfer flows
+- [ ] Author richer function-calling scenarios against the expanded mock API
+
+## Sprint 10 — Trend Dashboard
+- [ ] Build a static dashboard (GitHub Pages or Streamlit) plotting metric trends across reports/ history
