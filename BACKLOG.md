@@ -20,6 +20,7 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Write BACKLOG.md and PROGRESS.md in Mission Control's format
 - [x] Create GitHub milestones for every sprint and issues for every task
 - [x] Register fintech-ai-guard in Mission Control's projects.json
+- [x] Copy the full design plan into docs/plan.md so any AI tool can resume the project, not just the one that started it
 
 ## Sprint 2 — Risk Taxonomy & Ground-Truth Schema
 - [ ] Write docs/test-strategy.md defining the 10-category risk taxonomy

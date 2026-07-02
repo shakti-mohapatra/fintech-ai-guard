@@ -2,6 +2,16 @@
 
 A running log so multi-day work is easy to pick back up. Newest entry on top.
 
+## 2026-07-02 — Session wrap-up: plan made portable, pausing before Sprint 2
+
+**Latest commit:** pending (this entry).
+
+Added `docs/plan.md` — a portable copy of the full design plan (objective, architecture decisions + rationale, working process, risk taxonomy, QA metrics, sprint list, verification checklist) committed into the repo itself. It existed only at a Claude-Code-specific local path before this; now it's readable by any AI coding tool or human who clones the repo, which matters since this project is meant to be resumable across tools, not just one session/one tool. Filed and closed as issue #42 under Sprint 1's milestone for consistency with the "every task is a tracked issue" convention.
+
+**Session ending here — nothing mid-flight.** Sprints 0-1 are fully done (repo live, plumbing verified, backlog seeded, Mission Control registered). Note: the Mission Control `projects.json` registration itself is written but **deliberately left uncommitted** in `E:\mission-control`'s own repo, pending the user's own review of that separate project's history.
+
+**Next:** Sprint 2 — `docs/test-strategy.md` (finalize the 10-category risk taxonomy) and the canonical scenario YAML schema (`id`, `category`, `severity`, `description`, `input/context`, `expected_behavior`, `forbidden_patterns`, `required_fields`, `regulatory_ref`). Then Sprint 3 (scenario + assertion authoring) is where the user's Verifone/Geidea/L3 domain specifics matter most — worth checking in on specifics rather than inventing edge cases unilaterally.
+
 ## 2026-07-02 — Sprint 1: GitHub + Mission Control Wiring ✅
 
 **Latest commit:** pending (this entry). **11 GitHub Milestones, 41 Issues** created (Sprints 0-10, seeded from `BACKLOG.md` in full up front so the whole roadmap is visible immediately).
