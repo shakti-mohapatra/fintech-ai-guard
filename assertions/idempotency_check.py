@@ -13,6 +13,11 @@ idempotency check that's too trigger-happy is its own failure mode.
 
 import json
 import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _json_utils import strip_markdown_fences  # noqa: E402
 
 _DUPLICATE_REASON_PATTERN = re.compile(r"(?i)duplicate|already.?processed|idempot")
 
@@ -29,7 +34,7 @@ def get_assert(output: str, context: dict) -> dict:
         }
 
     try:
-        parsed = json.loads(output)
+        parsed = json.loads(strip_markdown_fences(output))
     except json.JSONDecodeError as e:
         return {"pass": False, "score": 0.0, "reason": f"Model output is not valid JSON: {e}"}
 

@@ -3,19 +3,27 @@
 Contract (promptfoo `type: python`): get_assert(output, context) -> dict with
 pass/score/reason. `context.vars` carries the test case's YAML `vars`, so each
 scenario picks its own schema via a `schema_file` var instead of hardcoding
-one schema per assertion file.
+one schema per assertion file. The canonical scenario schema
+(scenarios/scenario.schema.json) nests this under `vars.context.schema_file`
+(see docs/scenario-schema.md); a flat `vars.schema_file` is also accepted so
+promptfooconfig.smoke.yaml's Sprint 0 test case keeps working unchanged.
 """
 
 import json
+import sys
 from pathlib import Path
 
 import jsonschema
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _json_utils import strip_markdown_fences  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def get_assert(output: str, context: dict) -> dict:
-    schema_var = context.get("vars", {}).get("schema_file")
+    variables = context.get("vars", {})
+    schema_var = (variables.get("context") or {}).get("schema_file") or variables.get("schema_file")
     if not schema_var:
         return {"pass": False, "score": 0.0, "reason": "Scenario is missing required 'schema_file' var."}
 
@@ -28,7 +36,7 @@ def get_assert(output: str, context: dict) -> dict:
         return {"pass": False, "score": 0.0, "reason": f"Schema file is not valid JSON: {e}"}
 
     try:
-        parsed_output = json.loads(output)
+        parsed_output = json.loads(strip_markdown_fences(output))
     except json.JSONDecodeError as e:
         return {"pass": False, "score": 0.0, "reason": f"Model output is not valid JSON: {e}"}
 

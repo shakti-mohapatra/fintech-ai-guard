@@ -2,6 +2,49 @@
 
 A running log so multi-day work is easy to pick back up. Newest entry on top.
 
+## 2026-07-03 — Sprint 4: promptfoo Wiring ✅
+
+**Latest commit:** pending (this entry). Issues #23, #24, #25 closed. Sprint 4 milestone closed (0 open / 3 closed).
+
+A Google AI Studio key (`GOOGLE_API_KEY`) was added this session — the
+first real provider key the project has had. That unblocked live
+verification, which is the whole point of this entry: **every finding
+below was caught by actually running the eval against a real model, not
+by code review.** None of these would have surfaced from the Sprint 0
+`echo`-provider smoke test alone, which is exactly why issue #25 existed.
+
+### What shipped
+
+| What | Detail |
+|------|--------|
+| `assertions/dispatch.py` | Routes each scenario to its category's assertion module via `context.vars.category` — wired once via `defaultTest.assert`, not per-scenario, per the Sprint 2 design decision. `l3-data-extraction` layers `numeric_precision` on top of `schema_validator` when numeric context keys are present. 14 pytest cases, including a regression guard that loads a real scenario file from disk rather than a hand-rolled fixture |
+| `promptfooconfig.js` | JS, not YAML — `providers` is built conditionally from whichever of `ANTHROPIC_API_KEY`/`OPENAI_API_KEY`/`GOOGLE_API_KEY` are actually present, throwing a clear error only if none are. This is the real mechanism behind `docs/plan.md`'s "degrading gracefully" promise; a static YAML list can't omit an entry based on an env var |
+| `prompts/build_prompt.js` | Dynamic prompt, category-conditional: the 5 JSON-output categories get the actual target JSON Schema embedded verbatim plus a "respond with ONLY JSON" instruction; the 4 free-text categories get a lighter "this is synthetic test data, don't decline" framing |
+| `assertions/_json_utils.py` | `strip_markdown_fences()`, applied in all 4 JSON-parsing assertions (`schema_validator`, `numeric_precision`, `logic_consistency`, `idempotency_check`) |
+
+### Bugs found and fixed by actually running the eval
+
+1. **`schema_validator.py` read `schema_file` from the wrong place.** It read `vars.schema_file` (flat), but every real scenario file — and the canonical schema itself — nests it under `vars.context.schema_file`. This affected 8 scenario files across schema-compliance, logic-consistency, idempotency, and L3-extraction; every one of them would have silently failed with "missing schema_file" the first time `promptfoo eval` ran for real. Fixed with a documented fallback lookup (checks `context.schema_file` first, falls back to flat `schema_file`) so the Sprint 0 smoke test keeps working unchanged. Caught before ever calling a real provider, by rewriting `tests/test_dispatch.py`'s fixtures to mirror the real nested shape instead of a simplified flat one — the simplification is what let the original bug ship unnoticed.
+2. **Array-valued vars were silently multiplying test cases.** `required_fields`/`forbidden_patterns` are YAML arrays; promptfoo's default behavior cartesian-expands any array-valued var into one test case per array element. A single scenario with a 3-item `required_fields` silently became 3 test cases (confirmed live: `--filter-first-n 1` ran 3, not 1). Fixed with `defaultTest.options.disableVarExpansion: true`. Left unfixed, this would have 2-5x'd the real cost/quota consumption of every eval run without anyone noticing from the summary numbers alone.
+3. **A bare `{{input}}` prompt doesn't work against a real model.** Gemini flatly refused a bare transfer instruction ("I cannot directly transfer money..."), which the `echo` provider's smoke test could never have revealed since `echo` just parrots the input back regardless of framing. Fixed with `prompts/build_prompt.js`'s category-conditional framing.
+4. **Telling a model "respond in JSON" isn't enough — it needs the schema.** Once told to emit JSON without seeing the schema, Gemini invented plausible-but-wrong field names (`to_account`, `transaction_type` instead of `recipient_account`) and returned `amount` as a string. This wasn't a model-quality finding — every JSON-category scenario would fail this way regardless of model, since none of them were ever shown the actual contract. Fixed by embedding the real JSON Schema in the prompt for the 5 JSON-output categories.
+5. **Models wrap JSON in markdown fences even when told not to.** A well-known, provider-agnostic quirk; fixed with a shared `strip_markdown_fences()` helper rather than chasing prompt wording further.
+6. **`gemini-2.5-pro` has a hard 0-quota free tier** (`limit: 0` for both per-minute and per-day free-tier metrics — confirmed via a direct API call, not docs). Requires billing. Checked in with the user; switched the pinned model to `gemini-2.5-flash` (still a stable GA release, not `-preview`/`-latest`, preserving the reproducibility rationale from the original decision).
+7. **`gemini-2.5-flash`'s free tier is *also* tight — 20 requests/day**, and got exhausted partway through the first full 28-scenario run (which then sat silently retrying against a wall that wouldn't clear until the next reset, rather than erroring visibly — worth remembering for future debugging: silence after "Running N test cases" can mean a hard quota wall, not just slow API calls). **This is a real constraint on future sprints**, not just a today problem: Sprint 5's report snapshots and Sprint 6's CI gating will need either billing enabled or a very small daily-run scenario count if staying on `gemini-2.5-flash`'s free tier. Flagging here so it isn't rediscovered as a surprise later.
+
+### Verification
+
+Given the quota wall, full-scenario verification against the pinned `gemini-2.5-flash` wasn't possible today. Checked in with the user; ran a 9-scenario batch (one scenario per category, covering all 8) against `gemini-2.5-flash-lite` — a separate quota bucket, still available — via a one-off CLI provider override (`-r google:gemini-2.5-flash-lite`), **without changing the committed `gemini-2.5-flash` pin**.
+
+- `pytest tests/ -v` → **206 passed, 24 skipped** ✓
+- Live eval, 9 scenarios (1 per category, `gemini-2.5-flash-lite`): **4 passed, 0 failed, 5 errors**. The 4 that got a real response — schema-compliance, logic-consistency, injection, hallucination — **passed 100%**, confirming the full pipeline end to end for those assertion types. The other 5 hit a transient Google-side `503 UNAVAILABLE` ("high demand"), not a bug in this repo — distinct from an assertion failure (promptfoo tracks "errors" separately from "failed" for exactly this reason).
+- `PROMPTFOO_PASS_RATE_THRESHOLD` verified in **both directions** with a deterministic zero-cost `echo`-provider test: 100% pass rate exits `0`; an intentional failure with threshold=100 exits `100`. (First check of this gave a false negative — `| tail` in the shell pipeline was reporting `tail`'s exit code, not promptfoo's; re-ran without the pipe to get the real code.)
+- `promptfoo view` confirmed serving `HTTP 200` on a local port, no API calls involved.
+
+**Not yet done:** a full clean run of all 28 scenarios against the actual pinned `gemini-2.5-flash` (blocked on today's quota; retry once it resets, or once billing is enabled — see finding 7 above).
+
+**Next:** Sprint 3's two remaining items — tone/disclosure scenarios + `tone_rubric.py` (now unblocked: provider config exists, so the LLM-judge can actually run) and issue #22 (pytest completeness pass, effectively done except for `tone_rubric.py` once it exists). Then Sprint 5 (Reporting & Metrics), which should account for finding 7's quota constraint when designing how often full-suite runs happen.
+
 ## 2026-07-02 — Sprint 3 (partial): mock_api stub (POST /debit, /refund)
 
 **Latest commit:** pending (this entry). Issue #21 closed. Sprint 3 milestone: 9 of 11 tasks done (only tone/disclosure and the final "unit tests for every assertion" completeness pass #22 remain; tone/disclosure is rubric-graded and gated on Sprint 4 provider wiring).

@@ -17,6 +17,11 @@ for their tax/total reconciliation check.
 """
 
 import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _json_utils import strip_markdown_fences  # noqa: E402
 
 EPSILON = 0.005  # half a cent — catches any full-cent discrepancy while tolerating float noise
 
@@ -30,7 +35,7 @@ def get_assert(output: str, context: dict) -> dict:
     ctx = variables.get("context", {}) or {}
 
     try:
-        parsed = json.loads(output)
+        parsed = json.loads(strip_markdown_fences(output))
     except json.JSONDecodeError as e:
         return {"pass": False, "score": 0.0, "reason": f"Model output is not valid JSON: {e}"}
 

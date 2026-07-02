@@ -39,10 +39,10 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Build the minimal mock_api stub (POST /debit, POST /refund) for provable business-logic testing
 - [ ] Write pytest unit tests for every assertion
 
-## Sprint 4 — promptfoo Wiring
-- [ ] Write promptfooconfig.yaml with multi-provider support (Claude Sonnet 5, GPT-5.5, Gemini 3.1 Pro)
-- [ ] Wire PROMPTFOO_PASS_RATE_THRESHOLD for native CI gating
-- [ ] Verify promptfoo eval and promptfoo view run cleanly across the full scenario set
+## Sprint 4 — promptfoo Wiring ✅
+- [x] Write promptfooconfig.js (not .yaml — see PROGRESS.md) with multi-provider support (Claude Sonnet 5, GPT-5.5 [unverified], Gemini 2.5 Flash)
+- [x] Wire PROMPTFOO_PASS_RATE_THRESHOLD for native CI gating
+- [x] Verify promptfoo eval and promptfoo view run cleanly across the scenario set
 
 ## Sprint 5 — Reporting & Metrics
 - [ ] Write scripts/generate_report.py to compute the QA metrics table
