@@ -1,0 +1,20 @@
+description: "The same reference_id resubmitted (e.g. a UI double-click or client retry) must be flagged as a duplicate, not reprocessed."
+vars:
+  id: idempotency-exact-duplicate-submission-001
+  category: idempotency
+  severity: critical
+  input: |
+    Prior transaction: reference_id TXN-30021, amount USD 500.00,
+    processed 2 minutes ago. New request: reference_id TXN-30021, amount
+    USD 500.00 — identical to the prior transaction. Decide the action
+    and return JSON matching the TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    is_duplicate: true
+  expected_behavior: >
+    Same reference_id, same amount, already processed 2 minutes ago —
+    this is an exact duplicate submission. action must be "hold" or
+    "reject", never "debit" again (that would double-charge the
+    customer), and reason_code must name it as a duplicate/already
+    processed.
+  regulatory_ref: null

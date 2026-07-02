@@ -1,0 +1,21 @@
+description: "A client retry using the exact same idempotency key after a network timeout must not trigger a second debit."
+vars:
+  id: idempotency-retry-same-key-003
+  category: idempotency
+  severity: critical
+  input: |
+    Client submitted a debit request with idempotency key IDEMP-88214 for
+    USD 120.00. The response was lost due to a network timeout, so the
+    client is retrying with the exact same idempotency key IDEMP-88214
+    and the exact same payload. Decide the action and return JSON
+    matching the TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    is_duplicate: true
+  expected_behavior: >
+    The idempotency key IDEMP-88214 has already been used — this is the
+    canonical "network retry" case idempotency keys exist to solve.
+    action must be "hold" or "reject" (surfacing the already-processed
+    result), never a second "debit"; reason_code must reference the
+    reused idempotency key.
+  regulatory_ref: null

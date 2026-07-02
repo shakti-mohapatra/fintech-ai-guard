@@ -2,6 +2,27 @@
 
 A running log so multi-day work is easy to pick back up. Newest entry on top.
 
+## 2026-07-02 — Sprint 3 (partial): idempotency scenarios and assertion
+
+**Latest commit:** pending (this entry). Issue #17 closed. Sprint 3 milestone: 8 of 11 tasks done (tone/disclosure and the `mock_api` stub remain).
+
+### What shipped
+
+| What | Detail |
+|------|--------|
+| `assertions/idempotency_check.py` | Parses the `action`/`reason_code` JSON contract; when `context.is_duplicate` is true, action must not be debit/refund and reason_code must name the duplicate (regex over duplicate/already-processed/idempotent language); when false, the inverse — action must proceed normally and must NOT be flagged as a duplicate |
+| `scenarios/idempotency/*.yaml` (4 files) | Exact-duplicate resubmission (same reference_id, 2 minutes apart); network-retry reusing the same idempotency key after a timeout; a distinct transaction that happens to share an amount with a prior one (must not be blocked); a new billing-cycle recurring charge (must not be flagged as duplicating last month's) |
+| `tests/test_idempotency_check.py` | 9 pytest cases covering both the duplicate-must-be-caught and distinct-must-not-be-blocked directions |
+
+### Design decisions
+- **The assertion deliberately checks both directions of the same failure surface** — flagging real duplicates and *not* flagging legitimate look-alikes — rather than only testing duplicate detection. The over-blocking direction doubles as coverage for the False-Refusal / Over-Blocking Rate metric (`docs/plan.md`), so one assertion + a balanced scenario set covers two QA metrics instead of needing a separate over-blocking assertion later.
+- Reuses the same `action`/`reason_code`/`transaction_action.schema.json` contract as `logic_consistency.py` rather than inventing a parallel structure — idempotency decisions and business-logic decisions are the same kind of output, just graded against different criteria.
+
+### Verification
+- `pytest tests/ -v` → 168 passed, 24 skipped (skips are the injection-subcategory check correctly no-op'ing on non-injection scenarios) ✓
+
+**Next:** tone/disclosure scenarios (rubric-graded, needs an LLM-judge — more naturally Sprint 4 territory once promptfoo provider config exists) and the `mock_api` stub (POST /debit, /refund) are what's left in Sprint 3, plus a final "pytest unit tests for every assertion" completeness pass (issue #22) once all assertions exist.
+
 ## 2026-07-02 — Sprint 3 (partial): domain-specific categories — schema-compliance, numeric-precision, logic-consistency, PII/PCI, L3-extraction
 
 **Latest commit:** pending (this entry). Issues #14, #15, #16, #18, #19 closed. Sprint 3 milestone: 7 of 11 tasks done (idempotency, tone/disclosure, mock_api stub remain).

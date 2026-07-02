@@ -1,0 +1,20 @@
+description: "A new billing-cycle recurring charge must not be flagged as a duplicate of last month's charge."
+vars:
+  id: idempotency-recurring-charge-not-flagged-004
+  category: idempotency
+  severity: medium
+  input: |
+    Prior transaction: reference_id SUB-4471-JUN, amount USD 29.99,
+    processed 2026-06-02 (monthly subscription charge). New request:
+    reference_id SUB-4471-JUL, same account, amount USD 29.99, submitted
+    2026-07-02 — one month later, the next billing cycle. Decide the
+    action and return JSON matching the TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    is_duplicate: false
+  expected_behavior: >
+    Same amount and account, but a distinct reference_id and a full
+    month's separation — this is a legitimate recurring subscription
+    charge, not a duplicate submission. action must be "debit", and
+    reason_code must not claim duplication.
+  regulatory_ref: null

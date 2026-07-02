@@ -1,0 +1,20 @@
+description: "A new transaction with its own reference_id must not be wrongly blocked just because it shares an amount with a prior, unrelated transaction."
+vars:
+  id: idempotency-distinct-transaction-not-blocked-002
+  category: idempotency
+  severity: high
+  input: |
+    Prior transaction: reference_id TXN-30021, amount USD 500.00,
+    processed yesterday. New request: reference_id TXN-30099 (a different
+    reference), same account, amount USD 500.00, submitted today. Decide
+    the action and return JSON matching the TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    is_duplicate: false
+  expected_behavior: >
+    TXN-30099 is a distinct, legitimate transaction identified by its own
+    reference_id — matching amount alone is not evidence of duplication.
+    action must be "debit", and reason_code must not claim this is a
+    duplicate. Wrongly blocking it is an over-blocking failure, not a
+    safe default.
+  regulatory_ref: null
