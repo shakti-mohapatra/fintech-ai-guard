@@ -2,6 +2,31 @@
 
 A running log so multi-day work is easy to pick back up. Newest entry on top.
 
+## 2026-07-02 — Sprint 3 (partial): mock_api stub (POST /debit, /refund)
+
+**Latest commit:** pending (this entry). Issue #21 closed. Sprint 3 milestone: 9 of 11 tasks done (only tone/disclosure and the final "unit tests for every assertion" completeness pass #22 remain; tone/disclosure is rubric-graded and gated on Sprint 4 provider wiring).
+
+### What shipped
+
+| What | Detail |
+|------|--------|
+| `mock_api/` (FastAPI stub) | `models.py` (Pydantic request/response + `Action`/`ReasonCode` enums), `ledger.py` (in-memory, resettable, integer-minor-unit state with seeded synthetic accounts), `app.py` (POST `/debit`, POST `/refund`, read-only GET `/balance/{id}`, GET `/healthz`), `README.md` |
+| `tests/test_mock_api.py` | 19 pytest cases driving the app via FastAPI `TestClient` |
+
+### Design decisions — the guarantees are *provable*, not prose
+- **Refund structurally cannot debit.** `_decide_refund` has no code path that lowers a balance or returns `action="debit"`; a refund's only money movement is a credit. Tests assert a refund *raises* the balance and that `daily_debited` is untouched (a refund is not a negative debit). This is the concrete backing for the logic-consistency category's headline scenario — the LLM scenarios grade the model's *decision*, the mock API is the ground-truth system that decision is checked against.
+- **Two distinct no-double-charge mechanisms**, matching the two idempotency scenarios: a replayed `idempotency_key` returns the original stored response (`idempotent_replay: true`) without re-applying the movement (network-retry safety); a resubmitted `reference_id` for an already-processed transaction is rejected `DUPLICATE_SUBMISSION` (double-submit safety). Rejected decisions are *not* marked reference-seen, so a corrected resubmission under a fresh reference can still go through — avoids the over-blocking failure mode.
+- **Money is integer minor units end to end.** Decimals are parsed through `str` (so a JSON `250.50` can't smuggle in binary-float error) and converted to cents on entry; floats never touch a balance. `amount` with >2 decimal places is a 422; the business rule "amount must be > 0" is a 200 `reject`/`INVALID_AMOUNT` decision (zero *and* negative), not a validation error — so the decision surface stays uniform and gradeable.
+- **Decision responses are a superset of `transaction_action.schema.json`** (`action` + `reason_code`), so the ground-truth API speaks the same decision vocabulary the LLM scenarios are graded in.
+- **Scope held to minimal.** Read-only `/balance` exists only to make debit/refund effects observable in tests; balance-check *expansion* and multi-step transfer flows stay in Sprint 9 as planned.
+
+### Verification (unit · smoke · regression)
+- **Unit:** `pytest tests/` → **187 passed, 24 skipped** (24 skips are the injection-subcategory check correctly no-op'ing on non-injection scenarios). mock_api alone: 19/19.
+- **Smoke:** `npm run eval:smoke` (promptfoo `echo` provider) → **1 passed**, Node↔Python assertion plumbing still green after the additions.
+- **Regression:** the full `pytest` suite is the regression gate for the meta-QA layer (assertion code + schemas + every scenario file + mock_api) and is green. A promptfoo-*eval* regression against real providers with a recorded `reports/` baseline is not yet possible — it needs `promptfooconfig.yaml` + at least one provider key (Sprint 4) and the first curated snapshot (Sprint 5); called out here so the gap is explicit, not silent.
+
+**Next:** Sprint 3's remaining two items — tone/disclosure scenarios + `tone_rubric.py` (rubric-graded, naturally done alongside Sprint 4 provider wiring so the LLM-judge can actually run) and issue #22, the "unit tests for every assertion" completeness pass (effectively done except it should also cover `tone_rubric.py` once that exists). Then Sprint 4: `promptfooconfig.yaml` wiring the whole scenario library to real providers.
+
 ## 2026-07-02 — Sprint 3 (partial): idempotency scenarios and assertion
 
 **Latest commit:** pending (this entry). Issue #17 closed. Sprint 3 milestone: 8 of 11 tasks done (tone/disclosure and the `mock_api` stub remain).

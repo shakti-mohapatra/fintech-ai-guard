@@ -36,7 +36,7 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Author PII/PCI scenarios and pii_leakage.py assertion
 - [x] Author L3 data-extraction scenarios
 - [ ] Author tone/disclosure scenarios and tone_rubric.py assertion
-- [ ] Build the minimal mock_api stub (POST /debit, POST /refund) for provable business-logic testing
+- [x] Build the minimal mock_api stub (POST /debit, POST /refund) for provable business-logic testing
 - [ ] Write pytest unit tests for every assertion
 
 ## Sprint 4 — promptfoo Wiring
