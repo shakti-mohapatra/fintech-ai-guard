@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "transfer_request.schema.json",
+  "title": "TransferRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["amount", "currency", "recipient_account"],
+  "properties": {
+    "amount": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Transfer amount. Must be strictly positive — zero/negative amounts are a separate logic-consistency scenario, not a schema concern."
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code."
+    },
+    "recipient_account": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 34
+    },
+    "memo": {
+      "type": "string",
+      "maxLength": 140
+    }
+  }
+}

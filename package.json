@@ -1,0 +1,16 @@
+{
+  "name": "fintech-ai-guard",
+  "version": "0.1.0",
+  "description": "A deterministic, repeatable evaluation framework for validating LLM behavior against financial compliance and business-logic contracts.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "eval": "promptfoo eval",
+    "eval:smoke": "promptfoo eval -c promptfooconfig.smoke.yaml",
+    "view": "promptfoo view",
+    "redteam": "promptfoo redteam generate"
+  },
+  "devDependencies": {
+    "promptfoo": "^0.121.17"
+  }
+}

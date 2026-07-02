@@ -1,0 +1,20 @@
+# Sprint 0 smoke test. Verifies the Node <-> Python assertion plumbing end to
+# end (config parse -> provider call -> shell out to assertions/*.py ->
+# GradingResult) using promptfoo's built-in `echo` provider, so it needs no
+# API key. Real multi-model scenarios live in promptfooconfig.yaml (Sprint 4).
+description: "Sprint 0 smoke test"
+
+prompts:
+  - "{{transfer_json}}"
+
+providers:
+  - echo
+
+tests:
+  - description: "smoke: well-formed transfer JSON passes schema validation"
+    vars:
+      transfer_json: '{"amount": 250.50, "currency": "USD", "recipient_account": "ACC-100200300"}'
+      schema_file: "scenarios/schema/transfer_request.schema.json"
+    assert:
+      - type: python
+        value: file://assertions/schema_validator.py
