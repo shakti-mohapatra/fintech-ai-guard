@@ -27,8 +27,8 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Define the canonical scenario YAML schema (id, category, severity, description, input/context, expected_behavior, forbidden_patterns, required_fields, regulatory_ref)
 
 ## Sprint 3 — Scenario + Assertion Authoring
-- [ ] Author hallucination scenarios and their assertion
-- [ ] Author direct and document-embedded injection scenarios and their assertion
+- [x] Author hallucination scenarios and their assertion
+- [x] Author direct and document-embedded injection scenarios and their assertion
 - [ ] Author schema-compliance scenarios (transfer, refund, L3 line-item JSON Schemas)
 - [ ] Author numeric-precision scenarios and numeric_precision.py assertion
 - [ ] Author logic-consistency scenarios (refund-vs-debit, limits, boundary/zero/negative amounts, Luhn-valid-wrong-BIN) and logic_consistency.py assertion
