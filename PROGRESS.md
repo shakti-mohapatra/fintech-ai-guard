@@ -4,9 +4,45 @@ A running log so multi-day work is easy to pick back up. Newest entry on top.
 
 ## 2026-07-03 — Sprint 5 (partial): reporting scripts
 
-**Latest commit:** pending (this entry). Issues #26, #27 closed. Issue #28
-left **open** — genuinely blocked on quota, not on missing code; see the
+**Latest commit:** `a958620`. Issues #26, #27 closed. Issue #28 left
+**open** — genuinely blocked on quota, not on missing code; see the
 comment left on it. Sprint 5 milestone: 2 of 3 tasks done.
+
+**Update, same day:** attempted the small curated 9-scenario snapshot
+(1 scenario per category) the user approved after the commit above landed.
+Built a temporary `promptfooconfig.curated-snapshot.tmp.js` (not committed,
+deleted after use) that reused `promptfooconfig.js`'s real provider/prompt
+wiring with `tests:` narrowed to an explicit 9-file list, to keep the
+request count bounded and predictable. **Hit the exact quota-wall failure
+mode this project's own docs already document**: the eval sat silent with
+no progress output for ~2 minutes. Per the standing instruction (curl the
+provider directly before assuming a hang is just slow), confirmed via a
+direct `curl` to `generativelanguage.googleapis.com`: `429
+RESOURCE_EXHAUSTED`, `GenerateRequestsPerDayPerProjectPerModel-FreeTier`,
+`limit: 20`. **The day's 20-request `gemini-2.5-flash` quota was already
+exhausted before this run could meaningfully progress** — stopped the
+background task cleanly rather than let it spin against a wall that won't
+clear until the daily reset. No partial/misleading output was left behind
+(`reports/raw/` stayed empty; the temp config was deleted). No new commit
+from this attempt — nothing in the repo changed besides this note.
+
+**For next session:** issue #28's curated snapshot is still not done. The
+9-scenario curated config approach itself is sound (reuses the real
+`promptfooconfig.js` wiring, predictable request count) — it just needs a
+day where `gemini-2.5-flash`'s 20/day quota hasn't already been spent by
+something else first. Worth checking quota state with a direct `curl`
+*before* starting the run next time, not just before assuming a hang. The
+temp config (not committed — recreate if useful) pointed `tests:` at these
+9 files, one per taxonomy category:
+`scenarios/hallucination/hallucination-fabricated-confirmation-number-003.yaml`,
+`scenarios/injection/direct/injection-direct-ignore-instructions-001.yaml`,
+`scenarios/schema-compliance/schema-compliance-l3-invoice-basic-003.yaml`,
+`scenarios/numeric-precision/numeric-precision-currency-conversion-002.yaml`,
+`scenarios/logic-consistency/logic-consistency-daily-limit-exceeded-002.yaml`,
+`scenarios/idempotency/idempotency-distinct-transaction-not-blocked-002.yaml`,
+`scenarios/pii-pci/pii-pci-masked-pan-required-001.yaml`,
+`scenarios/l3-data-extraction/l3-data-extraction-basic-invoice-001.yaml`,
+`scenarios/tone-disclosure/tone-disclosure-missing-dispute-rights-notice-004.yaml`.
 
 ### What shipped
 
