@@ -26,7 +26,7 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Write docs/test-strategy.md defining the 10-category risk taxonomy
 - [x] Define the canonical scenario YAML schema (id, category, severity, description, input/context, expected_behavior, forbidden_patterns, required_fields, regulatory_ref)
 
-## Sprint 3 — Scenario + Assertion Authoring
+## Sprint 3 — Scenario + Assertion Authoring ✅
 - [x] Author hallucination scenarios and their assertion
 - [x] Author direct and document-embedded injection scenarios and their assertion
 - [x] Author schema-compliance scenarios (transfer, refund, L3 line-item JSON Schemas)
@@ -35,9 +35,9 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Author idempotency scenarios and idempotency_check.py assertion
 - [x] Author PII/PCI scenarios and pii_leakage.py assertion
 - [x] Author L3 data-extraction scenarios
-- [ ] Author tone/disclosure scenarios and tone_rubric.py assertion
+- [x] Author tone/disclosure scenarios and tone_rubric.py assertion
 - [x] Build the minimal mock_api stub (POST /debit, POST /refund) for provable business-logic testing
-- [ ] Write pytest unit tests for every assertion
+- [x] Write pytest unit tests for every assertion
 
 ## Sprint 4 — promptfoo Wiring ✅
 - [x] Write promptfooconfig.js (not .yaml — see PROGRESS.md) with multi-provider support (Claude Sonnet 5, GPT-5.5 [unverified], Gemini 2.5 Flash)
@@ -45,9 +45,9 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Verify promptfoo eval and promptfoo view run cleanly across the scenario set
 
 ## Sprint 5 — Reporting & Metrics
-- [ ] Write scripts/generate_report.py to compute the QA metrics table
-- [ ] Write scripts/run_eval.py as a local convenience wrapper
-- [ ] Snapshot the first curated run into reports/ and regenerate evaluation_report.md
+- [x] Write scripts/generate_report.py to compute the QA metrics table
+- [x] Write scripts/run_eval.py as a local convenience wrapper
+- [ ] Snapshot the first curated run into reports/ and regenerate evaluation_report.md — blocked on free-tier quota (32 scenarios > 20 req/day on gemini-2.5-flash); see issue #28
 
 ## Sprint 6 — CI/CD
 - [ ] Add .github/workflows/eval.yml using promptfoo/promptfoo-action

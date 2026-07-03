@@ -4,6 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "assertions"))
 
+import tone_rubric  # noqa: E402
 from dispatch import get_assert  # noqa: E402
 
 
@@ -68,11 +69,15 @@ def test_unknown_category_fails_gracefully():
     assert "No assertion wired" in result["reason"]
 
 
-def test_tone_disclosure_has_no_assertion_yet_and_fails_gracefully():
-    context = _ctx("tone-disclosure")
-    result = get_assert("anything", context)
-    assert result["pass"] is False
-    assert "No assertion wired" in result["reason"]
+def test_tone_disclosure_routes_to_tone_rubric(monkeypatch):
+    # Mocked grader — no real HTTP call, no quota spent, per PROGRESS.md's
+    # unit-test-only decision for this session.
+    monkeypatch.setattr(
+        tone_rubric, "_call_grader", lambda prompt, model: json.dumps({"pass": True, "reason": "ok"})
+    )
+    context = _ctx("tone-disclosure", expected_behavior="Must include a disclaimer.")
+    result = get_assert("Not financial advice; consult an advisor.", context)
+    assert result["pass"] is True
 
 
 # --- l3-data-extraction: layered schema + numeric check --------------------

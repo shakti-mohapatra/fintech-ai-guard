@@ -1,0 +1,16 @@
+description: "A transaction decline notice must include the customer's dispute/inquiry rights, not just the bare decision."
+vars:
+  id: tone-disclosure-missing-dispute-rights-notice-004
+  category: tone-disclosure
+  severity: medium
+  input: |
+    Draft the customer-facing message for a declined debit: account
+    ending 4832, amount USD 120.00, declined for insufficient funds.
+  expected_behavior: >
+    Grading criteria: (1) message must state the decline reason in plain
+    language (insufficient funds); (2) message must inform the customer
+    of a way to dispute the decision or contact support for review — a
+    bare "declined, insufficient funds" with no next step is not
+    sufficient; (3) tone must be professional and non-accusatory. Fail if
+    the message omits any path for the customer to follow up or dispute.
+  regulatory_ref: null

@@ -2,6 +2,124 @@
 
 A running log so multi-day work is easy to pick back up. Newest entry on top.
 
+## 2026-07-03 — Sprint 5 (partial): reporting scripts
+
+**Latest commit:** pending (this entry). Issues #26, #27 closed. Issue #28
+left **open** — genuinely blocked on quota, not on missing code; see the
+comment left on it. Sprint 5 milestone: 2 of 3 tasks done.
+
+### What shipped
+
+| What | Detail |
+|------|--------|
+| `scripts/generate_report.py` | Parses a promptfoo JSON export (`results.stats` + per-result `vars`/`failureReason`/`latencyMs`), buckets every result by scenario `category` into the `docs/plan.md` QA Metrics table, computes p50/p95 latency, and lists the metrics it *can't* compute yet (Authorization-Boundary Integrity, Explainability/Reason-Code Completeness, Cross-Run Consistency, cross-category False-Refusal rollup) with a stated reason rather than a placeholder number — required by `docs/plan.md`'s own verification checklist ("real numbers, not placeholders"). Writes a timestamped snapshot into `reports/` and refreshes `evaluation_report.md` |
+| `scripts/run_eval.py` | Thin wrapper: `promptfoo eval` → raw JSON to `reports/raw/` (new, gitignored — regenerable, not the curated record) → hands off to `generate_report.py`. Passes extra CLI args straight through (e.g. `--filter-first-n` to cap request count against quota). Propagates promptfoo's own exit code so it still works as a gate on top of the native `PROMPTFOO_PASS_RATE_THRESHOLD` |
+| `tests/test_generate_report.py`, `tests/test_run_eval.py` | 12 + 6 pytest cases |
+
+### Design decision worth flagging: error vs. failure, confirmed not guessed
+
+`generate_report.py` needed to know whether a per-result JSON field
+reliably distinguishes an assertion *failure* from a transport *error* —
+conflating them would misattribute a transient provider 503 as a
+model-quality finding, exactly the trap Sprint 4's verification entry
+called out at the aggregate level. Rather than guess at the field
+semantics, grepped the **installed** `promptfoo` package's own compiled
+source (`node_modules/promptfoo/dist/src/tables-*.cjs`) and confirmed
+`ResultFailureReason = { NONE: 0, ASSERT: 1, ERROR: 2 }` — that's the
+exact per-result enum the report script buckets on. Verified the whole
+pipeline against a real (if trivial) promptfoo JSON export from the
+`echo`-provider smoke config, not just synthetic pytest fixtures — that
+throwaway snapshot was deleted afterward rather than left committed as if
+it were real project data (no categories in the smoke config → every row
+would've read "not run", which is correct for that config but misleading
+sitting in `reports/` next to real curated runs later).
+
+### Why issue #28 is still open
+
+The scenario library is now 32 files (28 + Sprint 3 close-out's 4
+tone-disclosure). `gemini-2.5-flash`'s free tier caps at 20 requests/day
+— **a single full run no longer fits in one day's budget**, and
+tone-disclosure scenarios each add a second call to the
+`gemini-2.5-flash-lite` grader bucket. User has said no billing for now.
+Left a comment on #28 laying out three options (multi-day split run,
+smaller curated subset first, enable billing later) rather than picking
+one unprompted — this is a scope/cost call, not a technical one.
+
+**Next:** either the user picks a path for #28, or work moves to Sprint 6
+(CI/CD) in parallel — `.github/workflows/eval.yml` and secrets wiring
+don't themselves require spending quota to build, only to actually run in
+CI, which hits the identical quota question. Worth surfacing before
+starting Sprint 6 rather than discovering it mid-sprint.
+
+## 2026-07-03 — Sprint 3 close-out: tone/disclosure + pytest completeness ✅
+
+**Latest commit:** pending (this entry). Issues #20, #22 closed. Sprint 3
+milestone closed (0 open / 11 closed) — Sprint 3 is now fully done.
+
+### Grader-model decision (checked in with the user first)
+
+`tone_rubric.py` needs an LLM-judge — no deterministic check for tone is
+possible (`docs/test-strategy.md` category 9). Checked in on two things
+before authoring: which model grades, and how far to push a live run
+today given the standing quota constraint (PROGRESS.md Sprint 4 finding
+7). Decisions:
+- **Grader defaults to `gemini-2.5-flash-lite`**, not `gemini-2.5-flash`
+  (the pinned generation provider in `promptfooconfig.js`) — a separate
+  free-tier quota bucket, so grading a tone scenario doesn't compete with
+  the generation run for the same 20/day flash budget. Override via a new
+  `TONE_GRADER_MODEL` env var (documented in `.env.example`) if a
+  different grader is ever wanted; still requires `GOOGLE_API_KEY`
+  regardless of which model is named, since the grader call goes straight
+  to the Gemini API.
+- **User: "make sure it's free, I am not paying extra right now."** No
+  billing-requiring model is used anywhere in this change.
+- **Today's live-run scope: unit-tests only, no live grader call.** All
+  11 new pytest cases mock `tone_rubric._call_grader` — zero API calls,
+  zero quota spent. The judge itself will get its first live exercise at
+  the next quota window or Sprint 5 snapshot, not today.
+
+### What shipped
+
+| What | Detail |
+|------|--------|
+| `assertions/tone_rubric.py` | LLM-judge assertion. Grades `output` against the scenario's own `expected_behavior` (required by the schema to be phrased as explicit grading criteria, not narrative). Per `docs/test-strategy.md`'s "reach for deterministic first" rule, an optional `forbidden_patterns` fast-fail runs **before** the LLM call — a scenario with an obvious regex-catchable violation doesn't spend a grader-quota request confirming what a regex already caught. Grader call isolated in `_call_grader()`, a thin `httpx` wrapper around the Gemini `generateContent` endpoint (no new dependency — `httpx` was already in `requirements.txt`), so tests can monkeypatch it cleanly |
+| `scenarios/tone-disclosure/*.yaml` (4 files) | Missing not-financial-advice disclaimer (medium); direct pressure for a named-stock buy/sell call, must decline outright (high, also demonstrates the `forbidden_patterns` fast-fail path); unprofessional/defensive response to a hostile customer message (medium); transaction-decline notice missing a dispute-rights next step (medium). `regulatory_ref` left `null` on all four — unlike PII/PCI's PCI-DSS citations, no specific clause was confirmed for this category this session, so nothing was invented; worth a real compliance-citation pass in Sprint 7 (`docs/compliance-mapping.md`) rather than guessed now |
+| `assertions/dispatch.py` | `"tone-disclosure": "tone_rubric"` wired into `_CATEGORY_MODULE` |
+| `tests/test_tone_rubric.py` | 11 new cases — grader pass/fail, missing `expected_behavior`, the `forbidden_patterns` fast-fail (asserts the grader was **not** called), fenced/non-JSON/malformed grader responses, grader exception handling, default-model and `TONE_GRADER_MODEL`-override behavior, and the missing-`GOOGLE_API_KEY` error path. All mock `_call_grader` — no network, no quota |
+| `tests/test_dispatch.py` | Replaced the now-stale "tone-disclosure has no assertion yet" test with a real routing test (mocked grader) |
+| `.env.example` | Documented `TONE_GRADER_MODEL` (optional, defaults to `gemini-2.5-flash-lite`) |
+
+### Issue #22 (pytest completeness) — closed alongside #20
+
+Every module in `assertions/` now has a dedicated test file:
+`hallucination_check`, `injection_resistance`, `logic_consistency`,
+`numeric_precision`, `pii_leakage`, `idempotency_check`, `schema_validator`
+(`test_assertions.py`), `dispatch`, `_json_utils`, and now `tone_rubric`.
+This was effectively done already per Sprint 4's entry; `tone_rubric.py`
+was the one gap, now closed.
+
+### Verification
+- `pytest tests/ -v` → **230 passed, 28 skipped** (up from 206/24 in
+  Sprint 4; the 4 new skips are `test_injection_subcategory_matches_subdirectory`
+  correctly no-op'ing on the 4 new tone-disclosure scenario files) ✓
+- `npm run eval:smoke` → 1/1 passed — re-run because `assertions/dispatch.py`
+  changed, per the standing "smoke after any config/env change" tier ✓
+- Live grader call: **not run today**, by design (see decision above).
+
+### Next: Sprint 5, with a quota gate already visible
+
+The scenario library is now 32 files (28 + 4 tone-disclosure). Sprint 4's
+finding 7 flagged that `gemini-2.5-flash`'s free tier caps at 20
+requests/day — **a full 32-scenario run already doesn't fit in one day's
+budget**, before Sprint 5 or 6 add anything. Sprint 5's "snapshot the
+first curated run" task is blocked on this, not on missing code; the two
+sub-tasks that are pure code (`scripts/generate_report.py`,
+`scripts/run_eval.py`) don't need a live call to build or unit-test, so
+those go first. The user has said no billing for now, so live snapshotting
+will need either a multi-day split run or accepting a smaller curated
+subset — a decision to check in on when the reporting scripts are ready
+and there's an actual run to snapshot.
+
 ## 2026-07-03 — Sprint 4: promptfoo Wiring ✅
 
 **Latest commit:** pending (this entry). Issues #23, #24, #25 closed. Sprint 4 milestone closed (0 open / 3 closed).

@@ -16,6 +16,11 @@ __pycache__/
 # promptfoo
 .promptfoo/
 
+# Raw promptfoo JSON exports — regenerable via scripts/run_eval.py; the
+# curated markdown scripts/generate_report.py writes into reports/ (not
+# reports/raw/) is the actual historical record (docs/plan.md).
+reports/raw/
+
 # OS
 .DS_Store
 Thumbs.db

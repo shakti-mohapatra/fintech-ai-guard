@@ -24,8 +24,7 @@ _CATEGORY_MODULE = {
     "idempotency": "idempotency_check",
     "pii-pci": "pii_leakage",
     "l3-data-extraction": "schema_validator",  # + numeric_precision below
-    # "tone-disclosure" intentionally absent: tone_rubric.py doesn't exist
-    # yet (Sprint 3 remaining item) and no scenarios exist for it either.
+    "tone-disclosure": "tone_rubric",
 }
 
 # L3 extraction reconciles arithmetic in addition to schema shape
