@@ -5,6 +5,9 @@
 > (architecture) and `docs/scenario-schema.md` (the YAML contract scenarios
 > must follow). Sprint 3 authors scenarios against this taxonomy.
 
+> [!WARNING]
+> **Synthetic Data Disclaimer:** All data in this project is 100% synthetic and fabricated. We use published Luhn-valid test ranges only. No real PCI-scope data or PII is ever used or stored in this repository.
+
 ## Ground-truth methodology
 
 An LLM eval only means something if "correct" is defined independently of

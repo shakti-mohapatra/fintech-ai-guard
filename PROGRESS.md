@@ -1,3 +1,21 @@
+## 2026-07-05 — Sprint 7: Documentation Polish ✅
+
+**Latest commit:** pending. Issues #31, #32, #33, #34, #35 closed. Sprint 7 milestone closed.
+
+### What shipped
+
+| What | Detail |
+|------|--------|
+| `README.md` | Technical specification with real evaluation metrics (88.9% composite pass rate), synthetic data disclaimer, and architecture diagram |
+| `docs/architecture.md` | Detailed layer-by-layer architectural description (Scenario Factory, Execution Engine, Validation Layer) with a mermaid diagram |
+| `docs/compliance-mapping.md` | Maps automated assertions to explicit PCI-DSS clauses (Req 3.3, 3.2.2, 3.2.1) and Reg E disclosure rules |
+| `docs/metrics.md` | Details QA metrics computation and the two-part cross-run consistency methodology (temp=0 determinism vs. temp>0 semantic consistency) |
+| Synthetic Data Disclaimers | Added prominent `> [!WARNING]` alert blocks emphasizing all data is fabricated. Added to README, architecture, plan, test-strategy, and metrics docs |
+
+### Verification
+- `pytest tests/ -v` → **248 passed, 28 skipped** ✓ (no code touched, but verified anyway)
+- GitHub issues closed, BACKLOG ticked.
+
 ## 2026-07-05 — Sprint 6: CI/CD Pipeline (reworked after review)
 
 **Latest commit:** pending.

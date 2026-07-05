@@ -58,11 +58,11 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Fixed 2026-07-05: 3 pytest failures in tests/scripts/test_run_eval.py were Windows-local (run_eval.py uses `npx.cmd` on win32, tests hardcoded `"npx"`). Tests now derive the expected binary from `sys.platform`. Full suite: 248 passed, 28 skipped, 0 failed.
 
 ## Sprint 7 — Documentation Polish
-- [ ] Write the README as a technical spec with real metrics and an architecture diagram
-- [ ] Write docs/architecture.md
-- [ ] Write docs/compliance-mapping.md (assertion -> PCI-DSS clause mapping)
-- [ ] Write docs/metrics.md including the cross-run consistency methodology
-- [ ] Add the synthetic-data-only disclaimer to README and docs
+- [x] Write the README as a technical spec with real metrics and an architecture diagram
+- [x] Write docs/architecture.md
+- [x] Write docs/compliance-mapping.md (assertion -> PCI-DSS clause mapping)
+- [x] Write docs/metrics.md including the cross-run consistency methodology
+- [x] Add the synthetic-data-only disclaimer to README and docs
 
 ## Sprint 8 — Red-Teaming
 - [ ] Wire promptfoo redteam for injection, jailbreak, PII, and excessive-agency plugins

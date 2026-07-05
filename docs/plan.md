@@ -4,6 +4,9 @@
 > tool (not just the one that wrote it) can resume this project cold. For
 > live day-to-day status, read `PROGRESS.md` first, then `BACKLOG.md`.
 
+> [!WARNING]
+> **Synthetic Data Disclaimer:** All data in this project is 100% synthetic and fabricated. We use published Luhn-valid test ranges only. No real PCI-scope data or PII is ever used or stored in this repository.
+
 ## Objective
 
 Fintech-AI-Guard is **not a chatbot or a product feature** — it's a **validation/evaluation engine** that answers one question repeatably: *"If we swap in LLM X for this fintech workflow, does it reliably stay inside our compliance and business-logic contract — under normal conditions and under adversarial ones — and can we prove it on every change?"*
