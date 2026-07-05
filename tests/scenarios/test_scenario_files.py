@@ -12,7 +12,7 @@ import jsonschema
 import pytest
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SCHEMA = json.loads((REPO_ROOT / "scenarios" / "scenario.schema.json").read_text(encoding="utf-8"))
 VALIDATOR = jsonschema.Draft7Validator(SCHEMA)
 

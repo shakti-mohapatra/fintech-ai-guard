@@ -25,7 +25,7 @@ import json
 import logging
 from decimal import Decimal
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from . import ledger
 from .ledger import DebitRecord, to_decimal, to_minor_units
@@ -91,8 +91,6 @@ def balance(account_id: str) -> BalanceResponse:
     account = ledger.get_account(account_id)
     if account is None:
         # Read-only lookup; 404 is the honest answer for an unknown resource.
-        from fastapi import HTTPException
-
         raise HTTPException(status_code=404, detail="unknown account")
     return BalanceResponse(
         account_id=account.account_id,

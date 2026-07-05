@@ -29,7 +29,8 @@ def main(argv=None) -> int:
     ts_slug = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     raw_path = RAW_DIR / f"eval-{ts_slug}.json"
 
-    eval_cmd = ["npx", "promptfoo", "eval", "-c", "promptfooconfig.js", "-o", str(raw_path), *argv]
+    npx_cmd = "npx.cmd" if sys.platform == "win32" else "npx"
+    eval_cmd = [npx_cmd, "promptfoo", "eval", "-c", "promptfooconfig.js", "-o", str(raw_path), *argv]
     print(f"Running: {' '.join(eval_cmd)}")
     eval_result = subprocess.run(eval_cmd, cwd=REPO_ROOT)
 

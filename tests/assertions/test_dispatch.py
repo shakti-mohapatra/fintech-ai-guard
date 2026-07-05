@@ -2,7 +2,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "assertions"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "assertions"))
 
 import tone_rubric  # noqa: E402
 from dispatch import get_assert  # noqa: E402
@@ -135,7 +135,7 @@ def test_real_schema_compliance_scenario_file_round_trips():
     import yaml
 
     path = (
-        Path(__file__).resolve().parent.parent
+        Path(__file__).resolve().parent.parent.parent
         / "scenarios"
         / "schema-compliance"
         / "schema-compliance-transfer-basic-001.yaml"

@@ -5,7 +5,7 @@ from pathlib import Path
 import jsonschema
 import pytest
 
-SCHEMA_PATH = Path(__file__).resolve().parent.parent / "scenarios" / "scenario.schema.json"
+SCHEMA_PATH = Path(__file__).resolve().parent.parent.parent / "scenarios" / "scenario.schema.json"
 SCHEMA = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
 VALID_SCENARIO = {

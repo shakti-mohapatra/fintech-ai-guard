@@ -2,7 +2,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "assertions"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "assertions"))
 
 from numeric_precision import get_assert  # noqa: E402
 

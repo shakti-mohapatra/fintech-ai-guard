@@ -24,3 +24,6 @@ reports/raw/
 # OS
 .DS_Store
 Thumbs.db
+graphify-out/
+.claude/
+CLAUDE.md

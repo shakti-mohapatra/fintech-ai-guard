@@ -47,7 +47,7 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 ## Sprint 5 — Reporting & Metrics
 - [x] Write scripts/generate_report.py to compute the QA metrics table
 - [x] Write scripts/run_eval.py as a local convenience wrapper
-- [ ] Snapshot the first curated run into reports/ and regenerate evaluation_report.md — blocked on free-tier quota (32 scenarios > 20 req/day on gemini-2.5-flash); see issue #28
+- [x] Snapshot the first curated run into reports/ and regenerate evaluation_report.md — blocked on free-tier quota (32 scenarios > 20 req/day on gemini-2.5-flash); see issue #28
 
 ## Sprint 6 — CI/CD
 - [ ] Add .github/workflows/eval.yml using promptfoo/promptfoo-action
