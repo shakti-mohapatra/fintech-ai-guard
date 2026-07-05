@@ -8,11 +8,11 @@ on:
     branches:
       - main
   workflow_dispatch: {}
-  schedule:
-    # Nightly only — 32 scenarios exceeds gemini-2.5-flash's 20 req/day free
-    # quota, and every provider call costs money. Do not add push/PR triggers
-    # to the eval job without first raising quota/billing (see PROGRESS.md).
-    - cron: '0 3 * * *'
+  # Manual-only, on purpose: no cron/schedule trigger. Every provider call
+  # costs money except gemini-2.5-flash's 20 req/day free tier, and this repo
+  # only has a paid Anthropic key configured (see BACKLOG.md). Do not add a
+  # schedule trigger back without explicit go-ahead — it would spend money
+  # unattended, every run, with nobody watching.
 
 jobs:
   pytest:
@@ -35,8 +35,8 @@ jobs:
         run: python -m pytest -q
 
   evaluate:
-    name: promptfoo eval (paid — manual/nightly only)
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    name: promptfoo eval (paid — manual dispatch only)
+    if: github.event_name == 'workflow_dispatch'
     needs: pytest
     runs-on: ubuntu-latest
     steps:
