@@ -49,9 +49,13 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Write scripts/run_eval.py as a local convenience wrapper
 - [x] Snapshot the first curated run into reports/ and regenerate evaluation_report.md — blocked on free-tier quota (32 scenarios > 20 req/day on gemini-2.5-flash); see issue #28
 
-## Sprint 6 — CI/CD
-- [x] Add .github/workflows/eval.yml using promptfoo/promptfoo-action
-- [x] Configure GitHub Actions repo secrets for provider API keys
+## Sprint 6 — CI/CD ✅ (reworked 2026-07-05 — see docs/antigravity-review-2026-07-05.md)
+- [x] Add .github/workflows/eval.yml using promptfoo/promptfoo-action — rewritten: added required `config: promptfooconfig.js` input, gate via `fail-on-threshold: 95` action input, eval job restricted to `workflow_dispatch` + nightly `schedule` (push/PR only run the free pytest job — no accidental paid runs), added separate pytest job.
+- [x] promptfooconfig.js — reverted antigravity's model downgrade back to `anthropic:messages:claude-sonnet-5`.
+- [ ] Configure GitHub Actions repo secrets for provider API keys — MANUAL / USER-ONLY (repo Settings → Secrets and variables → Actions: `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`). Nothing else in Sprint 6 depends on this being done immediately — the eval job won't fire until you manually dispatch it or the nightly cron hits.
+
+## Known Issues
+- [x] Fixed 2026-07-05: 3 pytest failures in tests/scripts/test_run_eval.py were Windows-local (run_eval.py uses `npx.cmd` on win32, tests hardcoded `"npx"`). Tests now derive the expected binary from `sys.platform`. Full suite: 248 passed, 28 skipped, 0 failed.
 
 ## Sprint 7 — Documentation Polish
 - [ ] Write the README as a technical spec with real metrics and an architecture diagram

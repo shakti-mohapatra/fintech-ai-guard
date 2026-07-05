@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"
 
 import run_eval  # noqa: E402
 
+NPX = "npx.cmd" if sys.platform == "win32" else "npx"
+
 
 def test_builds_expected_promptfoo_command(tmp_path, monkeypatch):
     monkeypatch.setattr(run_eval, "RAW_DIR", tmp_path)
@@ -20,7 +22,7 @@ def test_builds_expected_promptfoo_command(tmp_path, monkeypatch):
     def fake_run(cmd, cwd=None):
         captured.append(cmd)
         # Simulate promptfoo writing its -o output file.
-        if cmd[0] == "npx":
+        if cmd[0] == NPX:
             out_path = Path(cmd[cmd.index("-o") + 1])
             out_path.write_text("{}", encoding="utf-8")
         return SimpleNamespace(returncode=0)
@@ -29,7 +31,7 @@ def test_builds_expected_promptfoo_command(tmp_path, monkeypatch):
     run_eval.main([])
 
     eval_cmd = captured[0]
-    assert eval_cmd[:5] == ["npx", "promptfoo", "eval", "-c", "promptfooconfig.js"]
+    assert eval_cmd[:5] == [NPX, "promptfoo", "eval", "-c", "promptfooconfig.js"]
     assert "-o" in eval_cmd
 
 
@@ -39,7 +41,7 @@ def test_extra_args_are_passed_through_to_promptfoo(tmp_path, monkeypatch):
 
     def fake_run(cmd, cwd=None):
         captured.append(cmd)
-        if cmd[0] == "npx":
+        if cmd[0] == NPX:
             out_path = Path(cmd[cmd.index("-o") + 1])
             out_path.write_text("{}", encoding="utf-8")
         return SimpleNamespace(returncode=0)
@@ -58,7 +60,7 @@ def test_calls_generate_report_with_raw_path(tmp_path, monkeypatch):
 
     def fake_run(cmd, cwd=None):
         captured.append(cmd)
-        if cmd[0] == "npx":
+        if cmd[0] == NPX:
             out_path = Path(cmd[cmd.index("-o") + 1])
             out_path.write_text("{}", encoding="utf-8")
         return SimpleNamespace(returncode=0)
@@ -74,7 +76,7 @@ def test_returns_eval_exit_code_on_success(tmp_path, monkeypatch):
     monkeypatch.setattr(run_eval, "RAW_DIR", tmp_path)
 
     def fake_run(cmd, cwd=None):
-        if cmd[0] == "npx":
+        if cmd[0] == NPX:
             out_path = Path(cmd[cmd.index("-o") + 1])
             out_path.write_text("{}", encoding="utf-8")
             return SimpleNamespace(returncode=100)  # e.g. PROMPTFOO_PASS_RATE_THRESHOLD breach
@@ -104,7 +106,7 @@ def test_returns_report_exit_code_when_report_generation_fails(tmp_path, monkeyp
     monkeypatch.setattr(run_eval, "RAW_DIR", tmp_path)
 
     def fake_run(cmd, cwd=None):
-        if cmd[0] == "npx":
+        if cmd[0] == NPX:
             out_path = Path(cmd[cmd.index("-o") + 1])
             out_path.write_text("{}", encoding="utf-8")
             return SimpleNamespace(returncode=0)

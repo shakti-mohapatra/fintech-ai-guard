@@ -1,14 +1,34 @@
-## 2026-07-05 — Sprint 6: CI/CD Pipeline
+## 2026-07-05 — Sprint 6: CI/CD Pipeline (reworked after review)
 
 **Latest commit:** pending.
 
-ME BUILD MAGIC TUBE THAT RUNS EVAL EVERY TIME WE PUSH CAVE PAINTING!
-PIPELINE GATE-KEEPS PULL REQUESTS! SPRINT 6 DONE!
+Antigravity's first pass at `.github/workflows/eval.yml` was reviewed before
+being allowed to run (full findings: `docs/antigravity-review-2026-07-05.md`).
+It had four blocking issues, which are fixed in this revision:
 
-### What shipped
-- Created `.github/workflows/eval.yml` using `promptfoo/promptfoo-action` to automatically run evaluations on push and pull requests to `main`.
-- Configured the workflow to use `PROMPTFOO_PASS_RATE_THRESHOLD: 95` (from `.env.example`) to natively gate PRs if the pass rate drops.
-- Checked off Sprint 6 tasks in `BACKLOG.md`.
+### What was wrong
+- Missing the required `config:` input on `promptfoo/promptfoo-action@v1` —
+  the action would have defaulted to a non-existent `promptfooconfig.yaml`
+  instead of the real `promptfooconfig.js`.
+- Gated via the `PROMPTFOO_PASS_RATE_THRESHOLD` env var only; the action's
+  PR gate is actually controlled by its own `fail-on-threshold` input.
+- Triggered the (paid, multi-provider) eval on every push and PR — with 32
+  scenarios against gemini-2.5-flash's 20 req/day free quota, this guarantees
+  429s and burns Anthropic/OpenAI credits on every commit.
+- Never ran the free pytest suite in CI at all.
+- Separately, a staged (uncommitted) edit to `promptfooconfig.js` had
+  downgraded the Anthropic provider from `claude-sonnet-5` to the June-2024
+  `claude-3-5-sonnet-20240620` — reverted, not committed.
+
+### What shipped instead
+- `pytest` job: runs on every push/PR to `main`, free, always on — the real
+  regression gate.
+- `evaluate` job: runs only on `workflow_dispatch` (manual) or a nightly
+  `schedule` cron — never on push/PR, so no accidental spend. Uses the
+  correct `config: promptfooconfig.js` and `fail-on-threshold: 95` inputs.
+- `promptfooconfig.js` restored to `anthropic:messages:claude-sonnet-5`.
+- Checked off the corrected Sprint 6 tasks in `BACKLOG.md`; repo-secrets
+  setup left unchecked as a manual, user-only step.
 
 ## 2026-07-05 — Sprint 5 (partial): curated snapshot completed
 

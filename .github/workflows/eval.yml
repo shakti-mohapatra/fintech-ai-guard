@@ -1,4 +1,4 @@
-name: Fintech-AI-Guard Eval
+name: Fintech-AI-Guard CI
 
 on:
   push:
@@ -7,9 +7,37 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch: {}
+  schedule:
+    # Nightly only — 32 scenarios exceeds gemini-2.5-flash's 20 req/day free
+    # quota, and every provider call costs money. Do not add push/PR triggers
+    # to the eval job without first raising quota/billing (see PROGRESS.md).
+    - cron: '0 3 * * *'
 
 jobs:
+  pytest:
+    name: Unit tests (free, no API cost)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        run: python -m pytest -q
+
   evaluate:
+    name: promptfoo eval (paid — manual/nightly only)
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    needs: pytest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -36,7 +64,9 @@ jobs:
       - name: Run promptfoo evaluation
         uses: promptfoo/promptfoo-action@v1
         with:
+          config: promptfooconfig.js
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          fail-on-threshold: 95
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
