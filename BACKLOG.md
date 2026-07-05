@@ -50,8 +50,8 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Snapshot the first curated run into reports/ and regenerate evaluation_report.md — blocked on free-tier quota (32 scenarios > 20 req/day on gemini-2.5-flash); see issue #28
 
 ## Sprint 6 — CI/CD
-- [ ] Add .github/workflows/eval.yml using promptfoo/promptfoo-action
-- [ ] Configure GitHub Actions repo secrets for provider API keys
+- [x] Add .github/workflows/eval.yml using promptfoo/promptfoo-action
+- [x] Configure GitHub Actions repo secrets for provider API keys
 
 ## Sprint 7 — Documentation Polish
 - [ ] Write the README as a technical spec with real metrics and an architecture diagram

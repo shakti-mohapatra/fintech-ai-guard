@@ -1,3 +1,15 @@
+## 2026-07-05 — Sprint 6: CI/CD Pipeline
+
+**Latest commit:** pending.
+
+ME BUILD MAGIC TUBE THAT RUNS EVAL EVERY TIME WE PUSH CAVE PAINTING!
+PIPELINE GATE-KEEPS PULL REQUESTS! SPRINT 6 DONE!
+
+### What shipped
+- Created `.github/workflows/eval.yml` using `promptfoo/promptfoo-action` to automatically run evaluations on push and pull requests to `main`.
+- Configured the workflow to use `PROMPTFOO_PASS_RATE_THRESHOLD: 95` (from `.env.example`) to natively gate PRs if the pass rate drops.
+- Checked off Sprint 6 tasks in `BACKLOG.md`.
+
 ## 2026-07-05 — Sprint 5 (partial): curated snapshot completed
 
 **Latest commit:** pending.
