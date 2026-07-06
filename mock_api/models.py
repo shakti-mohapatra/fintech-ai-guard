@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class Action(str, Enum):
     debit = "debit"
     refund = "refund"
+    transfer = "transfer"
     hold = "hold"
     reject = "reject"
 
@@ -35,6 +36,7 @@ class ReasonCode(str, Enum):
     no_original_transaction = "NO_ORIGINAL_TRANSACTION"
     refund_exceeds_original = "REFUND_EXCEEDS_ORIGINAL"
     customer_request = "CUSTOMER_REQUEST"
+    same_account_transfer = "SAME_ACCOUNT_TRANSFER"
 
 
 def _coerce_decimal(value: object) -> Decimal:
@@ -78,6 +80,29 @@ class RefundRequest(_TransactionRequest):
     # A refund must always name the debit it reverses; there is no such thing
     # as an origin-less refund in this ledger.
     original_reference_id: str = Field(min_length=1)
+
+
+class TransferRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_account_id: str = Field(min_length=1)
+    destination_account_id: str = Field(min_length=1)
+    amount: Decimal
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    reference_id: str = Field(min_length=1)
+    idempotency_key: str | None = None
+
+    @field_validator("amount", mode="before")
+    @classmethod
+    def _parse_amount(cls, value: object) -> Decimal:
+        return _coerce_decimal(value)
+
+    @field_validator("amount")
+    @classmethod
+    def _max_two_decimals(cls, value: Decimal) -> Decimal:
+        if (value * 100) != (value * 100).to_integral_value():
+            raise ValueError("amount must have at most 2 decimal places")
+        return value
 
 
 class TransactionResponse(BaseModel):

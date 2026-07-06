@@ -28,13 +28,14 @@ from decimal import Decimal
 from fastapi import FastAPI, HTTPException
 
 from . import ledger
-from .ledger import DebitRecord, to_decimal, to_minor_units
+from .ledger import DebitRecord, TransferRecord, to_decimal, to_minor_units
 from .models import (
     Action,
     BalanceResponse,
     DebitRequest,
     ReasonCode,
     RefundRequest,
+    TransferRequest,
     TransactionResponse,
 )
 
@@ -131,6 +132,21 @@ def refund(req: RefundRequest) -> TransactionResponse:
     return response
 
 
+@app.post("/transfer", response_model=TransactionResponse)
+def transfer(req: TransferRequest) -> TransactionResponse:
+    replay = _replay(req.idempotency_key)
+    if replay is not None:
+        _audit("transfer", req.reference_id, replay)
+        return replay
+
+    with ledger.get_lock():
+        response = _decide_transfer(req)
+        _remember(req.idempotency_key, response)
+
+    _audit("transfer", req.reference_id, response)
+    return response
+
+
 def _reject(req, reason: ReasonCode, *, balance_minor: int | None = None) -> TransactionResponse:
     return TransactionResponse(
         action=Action.reject,
@@ -219,4 +235,66 @@ def _decide_refund(req: RefundRequest) -> TransactionResponse:
         reference_id=req.reference_id,
         account_id=req.account_id,
         resulting_balance=to_decimal(account.balance_minor),
+    )
+
+
+def _reject_transfer(req: TransferRequest, reason: ReasonCode, *, balance_minor: int | None = None) -> TransactionResponse:
+    return TransactionResponse(
+        action=Action.reject,
+        amount=req.amount,
+        currency=req.currency,
+        reason_code=reason,
+        reference_id=req.reference_id,
+        account_id=req.source_account_id,
+        resulting_balance=to_decimal(balance_minor) if balance_minor is not None else None,
+    )
+
+
+def _decide_transfer(req: TransferRequest) -> TransactionResponse:
+    if req.source_account_id == req.destination_account_id:
+        return _reject_transfer(req, ReasonCode.same_account_transfer)
+
+    source = ledger.get_account(req.source_account_id)
+    dest = ledger.get_account(req.destination_account_id)
+    
+    if source is None or dest is None:
+        return _reject_transfer(req, ReasonCode.unknown_account)
+
+    if req.currency != source.currency or req.currency != dest.currency:
+        return _reject_transfer(req, ReasonCode.currency_mismatch, balance_minor=source.balance_minor)
+
+    amount_minor = to_minor_units(req.amount)
+    if amount_minor <= 0:
+        return _reject_transfer(req, ReasonCode.invalid_amount, balance_minor=source.balance_minor)
+
+    if ledger.reference_seen(req.reference_id):
+        return _reject_transfer(req, ReasonCode.duplicate_submission, balance_minor=source.balance_minor)
+
+    if source.daily_debited_minor + amount_minor > source.daily_limit_minor:
+        return _reject_transfer(req, ReasonCode.daily_limit_exceeded, balance_minor=source.balance_minor)
+
+    if amount_minor > source.balance_minor:
+        return _reject_transfer(req, ReasonCode.insufficient_funds, balance_minor=source.balance_minor)
+
+    source.balance_minor -= amount_minor
+    source.daily_debited_minor += amount_minor
+    dest.balance_minor += amount_minor
+    
+    ledger.record_transfer(
+        TransferRecord(
+            reference_id=req.reference_id,
+            source_account_id=req.source_account_id,
+            destination_account_id=req.destination_account_id,
+            amount_minor=amount_minor,
+            currency=req.currency,
+        )
+    )
+    return TransactionResponse(
+        action=Action.transfer,
+        amount=req.amount,
+        currency=req.currency,
+        reason_code=ReasonCode.approved,
+        reference_id=req.reference_id,
+        account_id=req.source_account_id,
+        resulting_balance=to_decimal(source.balance_minor),
     )

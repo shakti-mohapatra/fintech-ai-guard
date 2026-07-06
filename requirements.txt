@@ -9,3 +9,6 @@ uvicorn[standard]==0.34.0
 tenacity==9.0.0
 httpx==0.28.1
 google-genai==2.10.0
+streamlit==1.40.0
+pandas==2.2.3
+plotly==6.8.0

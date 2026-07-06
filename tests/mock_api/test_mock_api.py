@@ -270,3 +270,41 @@ def test_refund_idempotency_key_replay_credits_once():
     assert second["idempotent_replay"] is True
     # Debit -100 then a single +100 refund -> back to 1000.00, credited once.
     assert _bal("ACC-1001") == Decimal("1000.00")
+
+
+# --- transfer -------------------------------------------------------------
+
+def test_transfer_success():
+    resp = client.post(
+        "/transfer",
+        json={"source_account_id": "ACC-1001", "destination_account_id": "ACC-CAP", "amount": "50.00", "currency": "USD", "reference_id": "T1"}
+    ).json()
+    assert resp["action"] == "transfer"
+    assert resp["reason_code"] == "APPROVED"
+    assert _bal("ACC-1001") == Decimal("950.00")
+    assert _bal("ACC-CAP") == Decimal("10050.00")
+
+def test_transfer_currency_mismatch():
+    resp = client.post(
+        "/transfer",
+        json={"source_account_id": "ACC-1001", "destination_account_id": "ACC-2002", "amount": "50.00", "currency": "USD", "reference_id": "T2"}
+    ).json()
+    assert resp["reason_code"] == "CURRENCY_MISMATCH"
+
+def test_transfer_success_same_currency():
+    resp = client.post(
+        "/transfer",
+        json={"source_account_id": "ACC-1001", "destination_account_id": "ACC-LOW", "amount": "50.00", "currency": "USD", "reference_id": "T3"}
+    ).json()
+    assert resp["action"] == "transfer"
+    assert resp["reason_code"] == "APPROVED"
+    assert _bal("ACC-1001") == Decimal("950.00")
+    assert _bal("ACC-LOW") == Decimal("60.00")
+
+def test_transfer_insufficient_funds():
+    resp = client.post(
+        "/transfer",
+        json={"source_account_id": "ACC-LOW", "destination_account_id": "ACC-1001", "amount": "50.00", "currency": "USD", "reference_id": "T4"}
+    ).json()
+    assert resp["reason_code"] == "INSUFFICIENT_FUNDS"
+    assert _bal("ACC-LOW") == Decimal("10.00")

@@ -70,8 +70,8 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [~] Document red-team findings in a dedicated report section
 
 ## Sprint 9 — Full Agentic Mock-API Buildout
-- [ ] Expand mock_api with balance checks and multi-step transfer flows
-- [ ] Author richer function-calling scenarios against the expanded mock API
+- [x] Expand mock_api with balance checks and multi-step transfer flows
+- [ ] Author richer function-calling scenarios against the expanded mock API — reverted 2026-07-06, see docs/antigravity-review-2026-07-06.md; needs a real design for how a tool-orchestration scenario integrates with the eval pipeline before re-attempting
 
 ## Sprint 10 — Trend Dashboard
-- [ ] Build a static dashboard (GitHub Pages or Streamlit) plotting metric trends across reports/ history
+- [x] Build a static dashboard (GitHub Pages or Streamlit) plotting metric trends across reports/ history

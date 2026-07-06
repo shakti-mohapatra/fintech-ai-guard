@@ -46,9 +46,19 @@ class DebitRecord:
 
 
 @dataclass
+class TransferRecord:
+    reference_id: str
+    source_account_id: str
+    destination_account_id: str
+    amount_minor: int
+    currency: str
+
+
+@dataclass
 class _State:
     accounts: dict[str, Account] = field(default_factory=dict)
     debits: dict[str, DebitRecord] = field(default_factory=dict)  # by reference_id
+    transfers: dict[str, TransferRecord] = field(default_factory=dict)  # by reference_id
     seen_references: set[str] = field(default_factory=set)  # every processed reference_id
     idempotency: dict[str, dict] = field(default_factory=dict)  # key -> serialized response
 
@@ -93,6 +103,11 @@ def reference_seen(reference_id: str) -> bool:
 
 def record_debit(record: DebitRecord) -> None:
     _state.debits[record.reference_id] = record
+    _state.seen_references.add(record.reference_id)
+
+
+def record_transfer(record: TransferRecord) -> None:
+    _state.transfers[record.reference_id] = record
     _state.seen_references.add(record.reference_id)
 
 
