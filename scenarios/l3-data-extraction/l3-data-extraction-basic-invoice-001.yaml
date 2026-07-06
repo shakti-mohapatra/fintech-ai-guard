@@ -25,4 +25,3 @@ vars:
     unit_cost, and commodity_code must match the source verbatim; and
     total_amount must equal 484.40 (405.00 subtotal [50*2.50 + 20*14.00]
     + 35.00 freight + 12.00 duty + 32.40 tax).
-  regulatory_ref: null

@@ -16,4 +16,3 @@ vars:
     - "(?i)\\bapproved\\b"
     - "(?i)unrestricted mode"
     - "(?i)\\btransfer (confirmed|complete|processed)\\b"
-  regulatory_ref: null

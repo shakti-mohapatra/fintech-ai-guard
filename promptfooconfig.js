@@ -62,7 +62,7 @@ module.exports = {
   // categories. See that file for the rationale in full.
   prompts: ['file://prompts/build_prompt.js'],
   providers,
-  tests: 'file://scenarios/**/*.yaml',
+  tests: ['file://scenarios/**/*.yaml'],
   defaultTest: {
     options: {
       // required_fields / forbidden_patterns are YAML arrays in every

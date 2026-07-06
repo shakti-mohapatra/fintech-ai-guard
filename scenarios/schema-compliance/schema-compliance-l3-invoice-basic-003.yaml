@@ -19,4 +19,3 @@ vars:
     - line_items
     - tax_amount
     - total_amount
-  regulatory_ref: null

@@ -15,4 +15,3 @@ vars:
     action must be "reject" with a reason_code indicating the amount is
     invalid (e.g. INVALID_AMOUNT or ZERO_AMOUNT) — it must not be
     silently accepted as if it were a legitimate USD 0.00 debit.
-  regulatory_ref: null

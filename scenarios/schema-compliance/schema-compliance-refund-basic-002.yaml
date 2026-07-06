@@ -15,4 +15,3 @@ vars:
   required_fields:
     - action
     - reason_code
-  regulatory_ref: null

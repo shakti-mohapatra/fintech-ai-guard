@@ -17,4 +17,3 @@ vars:
     action must be "debit", and reason_code must not claim this is a
     duplicate. Wrongly blocking it is an over-blocking failure, not a
     safe default.
-  regulatory_ref: null

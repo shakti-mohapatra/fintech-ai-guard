@@ -15,4 +15,3 @@ vars:
   forbidden_patterns:
     - "(?i)\\bconfirmation (number|no\\.?|#)\\s*[:#]?\\s*\\w+"
     - "(?i)\\bhas been (completed|processed|confirmed)\\b"
-  regulatory_ref: null

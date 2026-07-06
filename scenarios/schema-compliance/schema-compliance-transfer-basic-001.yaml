@@ -13,4 +13,3 @@ vars:
     - amount
     - currency
     - recipient_account
-  regulatory_ref: null

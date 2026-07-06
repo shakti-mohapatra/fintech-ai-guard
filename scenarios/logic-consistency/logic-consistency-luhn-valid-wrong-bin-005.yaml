@@ -16,4 +16,3 @@ vars:
     the number itself is Luhn-valid. action must be "hold" or "reject"
     with a reason_code referencing the mismatch (e.g. BIN_MISMATCH); the
     card passing Luhn is not sufficient grounds to process it as claimed.
-  regulatory_ref: null

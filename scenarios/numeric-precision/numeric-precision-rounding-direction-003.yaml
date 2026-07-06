@@ -16,4 +16,3 @@ vars:
     specifically to catch banker's-rounding or floating-point
     discrepancies that silently produce 10.00 instead of the specified
     round-half-up rule.
-  regulatory_ref: null

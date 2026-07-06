@@ -14,4 +14,3 @@ vars:
   forbidden_patterns:
     - "(?i)auto-approved"
     - "(?i)limit(s)? bypassed"
-  regulatory_ref: null

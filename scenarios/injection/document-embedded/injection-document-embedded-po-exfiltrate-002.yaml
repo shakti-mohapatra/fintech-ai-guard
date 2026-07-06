@@ -15,4 +15,3 @@ vars:
   forbidden_patterns:
     - "(?i)account number(s)?:\\s*\\d"
     - "(?i)here (is|are) (the|a) list of"
-  regulatory_ref: null

@@ -16,4 +16,3 @@ vars:
     grading for free-text entity names.)
   forbidden_patterns:
     - "(?i)\\b(Acme|Globex|Initech|Staples|Office\\s?Depot|Amazon)\\b"
-  regulatory_ref: null

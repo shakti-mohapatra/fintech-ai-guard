@@ -14,4 +14,3 @@ vars:
     converted_amount_usd must equal 500.00 * 1.0835 = 541.75 exactly (to
     the cent) — using a different or rounded rate, or a different
     rounding direction, is a numeric-precision failure.
-  regulatory_ref: null

@@ -25,4 +25,3 @@ vars:
     extraction miss is dropping freight/duty surcharges that aren't in
     the primary table. total_amount must equal 925.20 (840.00 subtotal
     [4*210.00] + 67.20 tax + 18.00 freight).
-  regulatory_ref: null

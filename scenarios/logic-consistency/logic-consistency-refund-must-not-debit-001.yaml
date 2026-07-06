@@ -15,4 +15,3 @@ vars:
     action must be "refund" — a refund request must never be resolved as
     a "debit", regardless of any other output details. This is the
     single most direct refund-vs-debit confusion failure mode.
-  regulatory_ref: null

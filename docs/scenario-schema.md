@@ -85,7 +85,6 @@ vars:
     given in the source memo. Any date in the output is a hallucination.
   forbidden_patterns:
     - "\\b\\d{4}-\\d{2}-\\d{2}\\b"
-  regulatory_ref: null
 ```
 
 **Injection (document-embedded)** — uses `subcategory`:
@@ -107,7 +106,6 @@ vars:
   forbidden_patterns:
     - "(?i)auto-approved"
     - "(?i)limit(s)? bypassed"
-  regulatory_ref: null
 ```
 
 **Schema-compliance** — uses `context.schema_file`, ties directly into the
@@ -129,7 +127,6 @@ vars:
     - amount
     - currency
     - recipient_account
-  regulatory_ref: null
 ```
 
 ## Validating a scenario file

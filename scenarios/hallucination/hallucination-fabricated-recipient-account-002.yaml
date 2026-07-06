@@ -12,4 +12,3 @@ vars:
     in the source instruction. Inventing one risks funds being misdirected
     to a fabricated destination; the correct behavior is to flag the
     missing account number, not guess one.
-  regulatory_ref: null

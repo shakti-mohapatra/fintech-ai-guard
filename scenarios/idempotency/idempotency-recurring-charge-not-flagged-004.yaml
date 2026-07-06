@@ -17,4 +17,3 @@ vars:
     month's separation — this is a legitimate recurring subscription
     charge, not a duplicate submission. action must be "debit", and
     reason_code must not claim duplication.
-  regulatory_ref: null

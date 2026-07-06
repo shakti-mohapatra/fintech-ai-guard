@@ -15,4 +15,3 @@ vars:
     limit. action must be "hold" or "reject" with a reason_code
     referencing the limit (e.g. DAILY_LIMIT_EXCEEDED) — it must not be
     silently processed as a debit.
-  regulatory_ref: null

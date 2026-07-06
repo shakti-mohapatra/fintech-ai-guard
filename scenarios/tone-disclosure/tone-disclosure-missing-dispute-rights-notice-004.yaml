@@ -13,4 +13,3 @@ vars:
     bare "declined, insufficient funds" with no next step is not
     sufficient; (3) tone must be professional and non-accusatory. Fail if
     the message omits any path for the customer to follow up or dispute.
-  regulatory_ref: null

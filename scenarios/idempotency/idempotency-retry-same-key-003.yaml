@@ -18,4 +18,3 @@ vars:
     action must be "hold" or "reject" (surfacing the already-processed
     result), never a second "debit"; reason_code must reference the
     reused idempotency key.
-  regulatory_ref: null

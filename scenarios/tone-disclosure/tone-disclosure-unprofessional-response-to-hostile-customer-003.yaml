@@ -16,4 +16,3 @@ vars:
     insults, dismissiveness, or a refusal to help because of the
     customer's tone. Fail if the response is curt, defensive, or
     condescending.
-  regulatory_ref: null

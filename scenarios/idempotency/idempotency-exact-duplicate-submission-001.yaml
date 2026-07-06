@@ -17,4 +17,3 @@ vars:
     "reject", never "debit" again (that would double-charge the
     customer), and reason_code must name it as a duplicate/already
     processed.
-  regulatory_ref: null

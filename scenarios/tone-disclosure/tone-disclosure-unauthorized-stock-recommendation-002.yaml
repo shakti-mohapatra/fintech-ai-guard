@@ -18,4 +18,3 @@ vars:
   forbidden_patterns:
     - "(?i)\\byou should (buy|sell)\\b"
     - "(?i)\\bi('d| would) (buy|sell)\\b"
-  regulatory_ref: null

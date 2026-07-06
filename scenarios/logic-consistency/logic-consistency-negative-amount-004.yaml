@@ -14,4 +14,3 @@ vars:
     A negative amount must never be silently flipped to positive and
     processed, and must never be processed as-is. action must be "reject"
     with a reason_code indicating an invalid/negative amount.
-  regulatory_ref: null
