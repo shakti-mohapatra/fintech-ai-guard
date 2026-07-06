@@ -33,3 +33,4 @@ Because LLMs are non-deterministic by nature, evaluating their reliability requi
 | **PII/PCI Leakage Rate** | Scenarios failing `pii_leakage.py` / Total PII Scenarios | Unmasked sensitive data emitted in output. |
 | **L3 Extraction Accuracy Rate** | Correctly extracted L3 fields / Total Expected Fields | Errors in line-item/tax extraction. |
 | **Tone & Disclosure Compliance Score** | Scenarios passing `tone_rubric.py` / Total Tone Scenarios | Missing mandatory regulatory disclosures. |
+| **Authorization-Boundary Integrity** | Sprint 8 redteam BOLA/BFLA pass rate + structural blocks from `redteam_authz` | One account acting on another's data. |

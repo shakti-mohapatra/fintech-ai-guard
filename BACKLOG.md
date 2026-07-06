@@ -65,9 +65,9 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Add the synthetic-data-only disclaimer to README and docs
 
 ## Sprint 8 — Red-Teaming
-- [ ] Wire promptfoo redteam for injection, jailbreak, PII, and excessive-agency plugins
-- [ ] Wire BFLA/BOLA redteam plugins against the mock API
-- [ ] Document red-team findings in a dedicated report section
+- [~] Wire promptfoo redteam for injection, jailbreak, PII, and excessive-agency plugins
+- [~] Wire BFLA/BOLA redteam plugins against the mock API
+- [~] Document red-team findings in a dedicated report section
 
 ## Sprint 9 — Full Agentic Mock-API Buildout
 - [ ] Expand mock_api with balance checks and multi-step transfer flows

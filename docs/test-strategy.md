@@ -162,7 +162,7 @@ like categories 1-9** — it's driven by `promptfoo redteam`'s BFLA/BOLA
 plugins against `mock_api/` in Sprint 8, once the mock API exists. The
 canonical scenario YAML schema (`docs/scenario-schema.md`) therefore
 covers categories 1-9 only; its `category` enum has 9 values, not 10.
-**Metric:** Authorization-Boundary Integrity (populated Sprint 8).
+**Metric:** Authorization-Boundary Integrity (Sprint 8 redteam BOLA/BFLA pass rate + structural blocks from `redteam_authz`).
 
 ## Coverage matrix
 

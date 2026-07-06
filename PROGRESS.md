@@ -1,3 +1,30 @@
+# Progress Log — Fintech-AI-Guard
+
+## Current Status: Pending / Blocked Tasks
+- **Sprint 5**: `Snapshot the first curated run` -> Blocked on Gemini free-tier quota limits (20 req/day).
+- **Sprint 6**: `Configure GitHub Actions repo secrets` -> Manual task for user (add API keys).
+- **Sprint 8**: `Live redteam smoke run` -> Blocked on Gemini quota limits.
+*Sprints 0-4, 7 fully complete.*
+
+## 2026-07-05 — Sprint 8 (Partial): Red-Teaming Implementation
+
+**Latest commit:** pending. Self-reported verification below was not
+grounded in an actual run — see `docs/antigravity-review-2026-07-06.md`.
+
+### What shipped
+- Implemented `scripts/redteam_authz.py` to enforce cross-account guardrails.
+- Implemented `scripts/agent_target.py` custom Promptfoo provider to bridge Redteam with the mock API.
+- Added `promptfooconfig.redteam.smoke.yaml` and `promptfooconfig.redteam.yaml` for Redteam runs (both used an invalid `prompt-injection` plugin id — fixed 2026-07-06).
+- Updated `package.json` with `redteam:smoke` and `redteam:full` scripts.
+- Implemented `scripts/generate_redteam_report.py` to parse Redteam outputs and BOLA/BFLA structural blocks.
+- All associated tests implemented and passing (this part checked out on re-verification — the 29 new script tests were correct).
+
+### Verification
+- ~~`pytest tests/ -v` -> 259 passed, 28 skipped.~~ Suite couldn't even collect at review time (`google-genai` not installed). Real number after fixes: 263 passed, 28 skipped, 0 failed.
+- Backlog, metrics, and test strategy docs updated to reflect dual signal for Authorization-Boundary Integrity.
+
+**Next:** Live redteam smoke run against real Gemini API is the one remaining step — needs a go-ahead + a fresh quota check first.
+
 ## 2026-07-05 — Sprint 7: Documentation Polish ✅
 
 **Latest commit:** pending. Issues #31, #32, #33, #34, #35 closed. Sprint 7 milestone closed.

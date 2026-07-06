@@ -8,7 +8,8 @@
     "eval": "promptfoo eval",
     "eval:smoke": "promptfoo eval -c promptfooconfig.smoke.yaml",
     "view": "promptfoo view",
-    "redteam": "promptfoo redteam generate"
+    "redteam:smoke": "promptfoo redteam eval -c promptfooconfig.redteam.smoke.yaml",
+    "redteam:full": "promptfoo redteam eval -c promptfooconfig.redteam.yaml"
   },
   "devDependencies": {
     "promptfoo": "^0.121.17"
