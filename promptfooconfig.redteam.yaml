@@ -15,6 +15,11 @@ redteam:
   provider: 'google:gemini-2.5-flash'  # explicit grading/generation provider pin — do NOT let this fall back to the OpenAI default; OPENAI_API_KEY is empty and ANTHROPIC_API_KEY is a paid key not authorized for this
   plugins:
     - id: 'indirect-prompt-injection'
+      config:
+        # No `prompts:` block here, so promptfoo's default var name is
+        # `prompt` — matches agent_target.py's call_api(prompt, ...).
+        # See promptfooconfig.redteam.smoke.yaml for the same fix + rationale.
+        indirectInjectionVar: 'prompt'
     - id: 'pii'
     - id: 'excessive-agency'
     - id: 'bola'

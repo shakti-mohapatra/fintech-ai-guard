@@ -30,6 +30,10 @@ reports/redteam-*.json
 # reports/raw/) is the actual historical record (docs/plan.md).
 reports/raw/
 
+# redteam_authz.py's opt-in file log (REDTEAM_AUTHZ_LOG_PATH) — a raw
+# per-run artifact consumed by generate_redteam_report.py, not a committed record.
+logs/*.jsonl
+
 # OS
 .DS_Store
 Thumbs.db

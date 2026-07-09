@@ -71,3 +71,23 @@ def test_append_to_report(mock_export):
         assert "| `bola` | 1 | 1 | 0 | 0 ⚠️ (Mismatch: Promptfoo passed but 0 blocks logged) |" in content
     finally:
         f_path.unlink()
+
+def test_append_to_report_replaces_prior_section_not_duplicates(mock_export):
+    """Regenerating the report (e.g. re-running a redteam suite) must replace
+    the old Red-Team Findings section, not stack a second stale one under it."""
+    metrics = compute_redteam_metrics(mock_export, authz_blocks=0)
+
+    with tempfile.NamedTemporaryFile("w+", delete=False, encoding="utf-8") as f:
+        f.write("# Evaluation Report\n\n## Other Section\n\nkeep me\n")
+        f_path = Path(f.name)
+
+    try:
+        append_to_report(metrics, f_path)
+        append_to_report(metrics, f_path)
+        content = f_path.read_text(encoding="utf-8")
+
+        assert content.count("## Red-Team Findings") == 1
+        assert "## Other Section" in content
+        assert "keep me" in content
+    finally:
+        f_path.unlink()

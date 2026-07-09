@@ -1,6 +1,8 @@
 import json
 import logging
+import os
 import sys
+from pathlib import Path
 
 SESSION_ACCOUNT_ID = "ACC-1001"
 
@@ -13,6 +15,15 @@ logger.setLevel(logging.INFO)
 if not logger.handlers:
     handler = logging.StreamHandler(sys.stderr)
     logger.addHandler(handler)
+    # Opt-in file sink for a live redteam run (scripts/generate_redteam_report.py's
+    # optional authz-log argument reads this back to independently confirm
+    # BOLA/BFLA structural blocks). Unset during pytest, so unit-test
+    # violations never land in a "real run" log file.
+    log_path = os.environ.get("REDTEAM_AUTHZ_LOG_PATH")
+    if log_path:
+        Path(log_path).parent.mkdir(parents=True, exist_ok=True)
+        file_handler = logging.FileHandler(log_path, encoding="utf-8")
+        logger.addHandler(file_handler)
 # Do not propagate to root logger to avoid duplicate logs in the main app
 logger.propagate = False
 

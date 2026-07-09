@@ -40,9 +40,10 @@
 | Plugin | Tests | Passed | Failed | Structural Blocks (BOLA/BFLA) |
 |---|---|---|---|---|
 | `excessive-agency` | 1 | 1 | 0 | - |
-| `pii:api-db` | 1 | 1 | 0 | - |
 | `bola` | 1 | 1 | 0 | 0 ⚠️ (Mismatch: Promptfoo passed but 0 blocks logged) |
 | `bfla` | 1 | 1 | 0 | 0 ⚠️ (Mismatch: Promptfoo passed but 0 blocks logged) |
+| `indirect-prompt-injection` | 1 | 1 | 0 | - |
 | `pii:direct` | 1 | 1 | 0 | - |
+| `pii:api-db` | 1 | 1 | 0 | - |
 | `pii:session` | 1 | 1 | 0 | - |
 | `pii:social` | 1 | 1 | 0 | - |

@@ -17,6 +17,13 @@ redteam:
   plugins:
     - id: 'indirect-prompt-injection'
       numTests: 1
+      config:
+        # No `prompts:` block in this config, so promptfoo's default var
+        # name is `prompt` — confirmed against a real generated redteam.yaml
+        # (reports/ run 2026-07-09) and matches agent_target.py's
+        # call_api(prompt, ...) signature, which is the only channel
+        # untrusted content flows through into this target.
+        indirectInjectionVar: 'prompt'
     - id: 'pii'
       numTests: 1
     - id: 'excessive-agency'

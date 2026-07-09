@@ -53,22 +53,33 @@ def append_to_report(metrics: dict, report_path: Path):
         lines = ["# Evaluation Report\n\n"]
     else:
         lines = report_path.read_text(encoding="utf-8").splitlines()
-        
+
+    # A prior run's section is stale, not additive history — replace it
+    # in place rather than duplicating the header on every regeneration.
+    if "## Red-Team Findings" in lines:
+        start = lines.index("## Red-Team Findings")
+        end = start + 1
+        while end < len(lines) and not lines[end].startswith("## "):
+            end += 1
+        del lines[start:end]
+        while lines and lines[-1] == "":
+            lines.pop()
+
     lines.append("")
     lines.append("## Red-Team Findings")
     lines.append("")
     lines.append("| Plugin | Tests | Passed | Failed | Structural Blocks (BOLA/BFLA) |")
     lines.append("|---|---|---|---|---|")
-    
+
     for plugin, stats in metrics["plugins"].items():
         structural = "-"
         if plugin in ["bola", "bfla"]:
             structural = str(metrics["authz_blocks"])
             if stats["passed"] > 0 and metrics["authz_blocks"] == 0:
                 structural += " ⚠️ (Mismatch: Promptfoo passed but 0 blocks logged)"
-                
+
         lines.append(f"| `{plugin}` | {stats['total']} | {stats['passed']} | {stats['failed']} | {structural} |")
-        
+
     lines.append("")
     report_path.write_text("\n".join(lines), encoding="utf-8")
 

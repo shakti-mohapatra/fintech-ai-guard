@@ -64,9 +64,9 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Write docs/metrics.md including the cross-run consistency methodology
 - [x] Add the synthetic-data-only disclaimer to README and docs
 
-## Sprint 8 — Red-Teaming
-- [~] Wire promptfoo redteam for injection, jailbreak, PII, and excessive-agency plugins — PII (4 subcategories) + excessive-agency ran live and passed; `indirect-prompt-injection` failed validation (`config.indirectInjectionVar` not set, see Sprint 13 smoke run) and was skipped; `jailbreak` was never added to the smoke config at all. Still partial, not closing this box — see Sprint 14.
-- [x] Wire BFLA/BOLA redteam plugins against the mock API — both ran live 2026-07-09, 1/1 passed each. Caveat: no `redteam.authz` log file was captured this run (logger is stderr-only, not piped to a file), so the "structural block" column in `evaluation_report.md` shows an honest 0/mismatch rather than an independently-confirmed block count — LLM-judge pass only.
+## Sprint 8 — Red-Teaming ✅
+- [x] Wire promptfoo redteam for injection, jailbreak, PII, and excessive-agency plugins — PII (4 subcategories), excessive-agency, and `indirect-prompt-injection` (fixed Sprint 14) all ran live and passed. `jailbreak` is a promptfoo *strategy*, not a plugin (Sprint 14 finding) — correctly wired under `strategies:` in `promptfooconfig.redteam.yaml`, deliberately excluded from the smoke tier to protect quota.
+- [x] Wire BFLA/BOLA redteam plugins against the mock API — both ran live 2026-07-09, 1/1 passed each both runs. `redteam.authz` can now optionally log to a file (Sprint 14, `REDTEAM_AUTHZ_LOG_PATH`) for independent structural-block confirmation alongside the LLM-judge verdict.
 - [x] Document red-team findings in a dedicated report section — `evaluation_report.md` § Red-Team Findings, from `eval-Ob2-2026-07-09T08:20:44`
 
 ## Sprint 9 — Full Agentic Mock-API Buildout
@@ -106,7 +106,8 @@ Code complete since Sprint 8 (`docs/sprint8-implementation-plan.md`); blocked pu
 - [x] 13.3 Run generate_redteam_report.py, append findings to evaluation_report.md — fixed a real bug in the script first (it read `vars.pluginId`, but promptfoo's export puts it at `result.metadata.pluginId` — every row was rendering as `(unknown plugin)`); regression-tested (`tests/scripts/test_generate_redteam_report.py`, 3/3 pass) before trusting the output
 - [x] 13.4 Tick Sprint 8's boxes — done above; `indirect-prompt-injection` and `jailbreak` gaps intentionally left open rather than papered over, tracked as Sprint 14
 
-## Sprint 14 — Red-Team Coverage Gaps (found during Sprint 13's live run)
-- [ ] Fix `indirect-prompt-injection` plugin: set `config.indirectInjectionVar` in `promptfooconfig.redteam.smoke.yaml` (and the full config) so it actually generates instead of silently skipping
-- [ ] Add a `jailbreak` plugin entry to the smoke config — it was never included, despite Sprint 8's original scope naming it
-- [ ] Pipe `redteam.authz`'s logger to a file (currently stderr-only) so BOLA/BFLA structural blocks can be independently confirmed against the LLM-judge verdict, not just asserted
+## Sprint 14 — Red-Team Coverage Gaps (found during Sprint 13's live run) ✅
+- [x] Fix `indirect-prompt-injection` plugin: set `config.indirectInjectionVar: 'prompt'` in `promptfooconfig.redteam.smoke.yaml` and `promptfooconfig.redteam.yaml` (confirmed default var name against a real generated `redteam.yaml` — no `prompts:` block in either config, so promptfoo falls back to `prompt`, matching `agent_target.py`'s `call_api(prompt, ...)`). Verified live 2026-07-09: plugin generated and ran (previously silently skipped).
+- [x] `jailbreak` — **not a plugin**, corrected instead of added: verified against the installed `promptfoo` package's own strategy registry (`node_modules/promptfoo/dist/src/strategies-CSRF0f2a.cjs`) that `jailbreak` is a **strategy** id, not a plugin id, and doesn't take `numTests` (strategies multiply existing plugin test cases instead). Sprint 8's original wording was loose. `promptfooconfig.redteam.yaml` already has it correctly under `strategies:`; left out of the smoke tier on purpose, per the smoke config's own quota-protection rationale (a strategy would multiply, not add 1, test case).
+- [x] Piped `redteam.authz`'s logger to a file via opt-in `REDTEAM_AUTHZ_LOG_PATH` env var (`scripts/redteam_authz.py`) — off by default so pytest runs don't pollute a "real run" log with test events. Verified live 2026-07-09: file created, valid (empty) jsonl — this run's bola/bfla cases had the model refuse verbally before ever calling a tool, so the structural guard genuinely wasn't exercised (honest 0, not a broken mechanism — see PROGRESS.md).
+- [x] (found while regenerating the report) `scripts/generate_redteam_report.py` appended a second `## Red-Team Findings` section instead of replacing the first on a re-run — fixed to replace in place; regression test added.

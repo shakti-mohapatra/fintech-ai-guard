@@ -4,9 +4,101 @@
 - **Sprint 5**: `Snapshot the first curated run` -> Blocked on Gemini free-tier quota limits (20 req/day).
 - **Sprint 6**: `Configure GitHub Actions repo secrets` -> Manual task for user (add API keys).
 - **Sprint 9**: `Author richer function-calling scenarios` -> Reverted 2026-07-06 during review, needs real design; see `docs/antigravity-review-2026-07-06.md`.
-- **Sprint 14** (new, found during Sprint 13): `indirect-prompt-injection` plugin misconfigured (missing `config.indirectInjectionVar`), never actually ran; `jailbreak` plugin never added to the smoke config at all; BOLA/BFLA structural blocks aren't independently log-confirmed (authz logger is stderr-only).
+- **`package.json`'s `redteam:smoke`/`redteam:full` scripts** still point at `promptfoo redteam eval` (generate-less, 0 adversarial cases) instead of `promptfoo redteam run` — flagged in Sprint 13, not yet fixed, not in Sprint 14's scope. Use `promptfoo redteam run` directly until picked up.
 - **Open finding (2026-07-06)**: `mock_api`'s audit log echoes a PAN-shaped `reference_id` unmasked — tracked as a documented `xfail`, needs a product decision (reject vs. redact). See the 2026-07-06 Sprint 12 entry below.
-*Sprints 0-4, 7, 11, 12, 13 fully complete. Sprint 9's transfer endpoint and Sprint 10's dashboard complete. GitHub issue mirroring for Sprint 11/12/13 is pending — the GitHub connector isn't authorized in this session; BACKLOG.md/PROGRESS.md are the source of truth in the meantime. The 2026-07-05 entries below were self-reported by Antigravity and initially wrong (see inline strikethroughs) — corrected 2026-07-06 after independent re-verification; full findings in `docs/antigravity-review-2026-07-06.md`.*
+*Sprints 0-4, 7, 11, 12, 13, 14 fully complete. Sprint 9's transfer endpoint and Sprint 10's dashboard complete. GitHub issue mirroring for Sprint 11/12/13/14 is pending — the GitHub connector isn't authorized in this session; BACKLOG.md/PROGRESS.md are the source of truth in the meantime. The 2026-07-05 entries below were self-reported by Antigravity and initially wrong (see inline strikethroughs) — corrected 2026-07-06 after independent re-verification; full findings in `docs/antigravity-review-2026-07-06.md`.*
+
+## 2026-07-09 — Sprint 14: Red-Team Coverage Gaps
+
+Closed the 3 gaps found during Sprint 13's live run. All three verified by
+actually re-running the redteam suite, not just by code inspection.
+
+**1. `indirect-prompt-injection` plugin fix.** Neither redteam config
+(`promptfooconfig.redteam.smoke.yaml`, `promptfooconfig.redteam.yaml`) has a
+`prompts:` block, so promptfoo falls back to its default var name, `prompt`
+— confirmed by inspecting a real generated `redteam.yaml` from Sprint 13's
+run (`vars: prompt: >- ...`), which also matches `agent_target.py`'s
+`call_api(prompt, options, context)` signature: `prompt` is the only channel
+untrusted content flows into this target through. Set
+`config.indirectInjectionVar: 'prompt'` on the plugin in both configs.
+Verified live: the plugin generated a real test case and ran (previously
+silently skipped — validation had been failing with `Indirect prompt
+injection plugin requires config.indirectInjectionVar to be set`, confirmed
+by reading the installed `promptfoo` package's own source,
+`node_modules/promptfoo/dist/src/index.cjs`).
+
+**2. `jailbreak` — corrected, not added as asked.** Before adding it to the
+smoke config's `plugins:` list per the original ask, checked the installed
+`promptfoo` package's strategy registry
+(`node_modules/promptfoo/dist/src/strategies-CSRF0f2a.cjs`):
+`jailbreak` is a **strategy** id, not a plugin id — it isn't in any plugin
+registry, and it doesn't take `numTests` (strategies multiply the test
+cases from whatever plugins are already selected, rather than adding their
+own fixed count). Adding it under `plugins:` would have failed exactly the
+same way item 1 was failing. Flagged this to the user before proceeding
+(AskUserQuestion) rather than silently doing something different from what
+was asked; user chose to leave the smoke tier plugin-only and correct the
+BACKLOG wording instead of paying the strategy's extra-call cost in the
+quota-constrained smoke tier. `promptfooconfig.redteam.yaml` (the manual,
+not-quota-limited full config) already had it correctly under `strategies:`
+since Sprint 8 — no change needed there beyond the indirect-injection fix.
+
+**3. `redteam.authz` file logging.** Added an opt-in `REDTEAM_AUTHZ_LOG_PATH`
+env var to `scripts/redteam_authz.py` — when set, a `logging.FileHandler` is
+added alongside the existing stderr handler. Deliberately opt-in (not
+default-on): the logger singleton is shared with pytest's imports of the
+same module, and a default-on file sink would have mixed fake
+unit-test violation events into what's supposed to be a real run's log.
+Documented in `.env.example`, new pytest case
+(`test_file_handler_added_when_env_var_set`) proves the handler is actually
+added and actually writes valid jsonl, not just that the env var is read.
+
+**Live verification (all 3 fixes, one suite run):** curl-checked Gemini
+quota first (200 OK, no retry needed), got explicit go-ahead, then ran
+`promptfoo redteam run -c promptfooconfig.redteam.smoke.yaml` with
+`REDTEAM_AUTHZ_LOG_PATH=logs/redteam-authz.jsonl` set
+(`eval-uFY-2026-07-09T08:44:59`). **8/8 test cases passed (100%)**,
+including `indirect-prompt-injection` generating and running for the first
+time. The authz log file was created and is valid (empty) jsonl — not a
+broken mechanism: inspecting the exported responses shows the model refused
+every cross-account/PII/excessive-agency attempt verbally before ever
+calling `debit_tool`/`refund_tool`/`balance_tool`, so `guarded_tool_call`'s
+structural guard genuinely wasn't exercised this run.
+`evaluation_report.md`'s Red-Team Findings table still correctly shows the
+bola/bfla mismatch warning (LLM-judge passed, 0 structural blocks logged) —
+the same honest-gap signal as Sprint 13, now backed by a log file that
+actually exists to confirm the zero rather than a stub for one.
+
+**Found and fixed a real bug while regenerating the report:**
+`scripts/generate_redteam_report.py`'s `append_to_report` always appended a
+new `## Red-Team Findings` section rather than replacing the previous one —
+running the report generator twice (Sprint 13, then this session) produced
+two stacked, contradictory sections in `evaluation_report.md`. Fixed to
+replace the existing section in place if present; regression test added
+(`test_append_to_report_replaces_prior_section_not_duplicates`). Manually
+deduped the one stale section this bug had already produced before the fix
+landed.
+
+**First worker-crash attempt, no quota spent:** an initial run passed
+`--output reports/raw/redteam-smoke-sprint14.json` on the `redteam run`
+command line, which broke promptfoo's Python-worker path resolution
+(it tried to load `reports/raw/scripts/agent_target.py` instead of
+`scripts/agent_target.py` — looks like `--output`'s directory gets treated
+as a base path for relative target resolution in this promptfoo version,
+0.121.17). All 8 test cases errored with `Worker failed to become ready`
+before any provider call was attempted — zero Gemini calls made. Re-ran
+without `--output`, exported the completed eval separately via
+`promptfoo export eval <id> -o <file>` instead. Worth remembering: don't
+combine `--output` with `redteam run` in this promptfoo version; export
+after the fact.
+
+**Sprint 8's box closed for real** — both remaining caveats (`jailbreak`
+plugin-vs-strategy confusion, stderr-only authz logger) are resolved.
+BACKLOG.md updated accordingly.
+
+**Quota spent:** 1 (curl check) + 8 (this run's `pii`/`excessive-agency`/
+`bola`/`bfla`/`indirect-prompt-injection` calls, no strategies applied) = 9
+of the 20/day `gemini-2.5-flash` free-tier cap.
 
 ## 2026-07-09 — Sprint 13: Red-Team Go-Live
 
