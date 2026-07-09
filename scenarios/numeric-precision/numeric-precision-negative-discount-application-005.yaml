@@ -1,0 +1,18 @@
+description: "A discount line must reduce the total by exactly its stated amount — not be dropped, double-applied, or applied in the wrong direction."
+vars:
+  id: numeric-precision-negative-discount-application-005
+  category: numeric-precision
+  severity: high
+  input: |
+    Compute the invoice total. Subtotal: USD 250.00. Loyalty discount:
+    USD -15.00 (a credit, reduces the total). Return JSON with subtotal,
+    discount_amount, and total_amount.
+  context:
+    components: ["subtotal", "discount_amount"]
+    total_field: "total_amount"
+    expected_total: 235.00
+  expected_behavior: >
+    subtotal must equal 250.00, discount_amount must equal -15.00 (a
+    negative value representing the credit), and total_amount must equal
+    235.00 (250.00 + (-15.00)). Dropping the discount, flipping its sign,
+    or applying it twice are each numeric-precision failures.

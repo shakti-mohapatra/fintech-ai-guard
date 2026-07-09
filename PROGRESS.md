@@ -3,9 +3,111 @@
 ## Current Status: Pending / Blocked Tasks
 - **Sprint 5**: `Snapshot the first curated run` -> Blocked on Gemini free-tier quota limits (20 req/day).
 - **Sprint 6**: `Configure GitHub Actions repo secrets` -> Manual task for user (add API keys).
-- **Sprint 8**: `Live redteam smoke run` -> Blocked on Gemini quota limits.
+- **Sprint 8 / Sprint 13**: `Live redteam smoke run` -> Blocked on Gemini quota limits + requires an explicit go-ahead at execution time (see `docs/sprint11-test-hardening-plan.md` §3). Not started this session per explicit instruction not to touch live APIs without being asked.
 - **Sprint 9**: `Author richer function-calling scenarios` -> Reverted 2026-07-06 during review, needs real design; see `docs/antigravity-review-2026-07-06.md`.
-*Sprints 0-4, 7 fully complete. Sprint 9's transfer endpoint and Sprint 10's dashboard complete. The 2026-07-05 entries below were self-reported by Antigravity and initially wrong (see inline strikethroughs) — corrected 2026-07-06 after independent re-verification; full findings in `docs/antigravity-review-2026-07-06.md`.*
+- **Open finding (2026-07-06)**: `mock_api`'s audit log echoes a PAN-shaped `reference_id` unmasked — tracked as a documented `xfail`, needs a product decision (reject vs. redact). See the 2026-07-06 Sprint 12 entry below.
+*Sprints 0-4, 7, 11, 12 fully complete. Sprint 9's transfer endpoint and Sprint 10's dashboard complete. GitHub issue mirroring for Sprint 11/12/13 is pending — the GitHub connector isn't authorized in this session; BACKLOG.md/PROGRESS.md are the source of truth in the meantime. The 2026-07-05 entries below were self-reported by Antigravity and initially wrong (see inline strikethroughs) — corrected 2026-07-06 after independent re-verification; full findings in `docs/antigravity-review-2026-07-06.md`.*
+
+## 2026-07-06 — Sprint 11 + Sprint 12 complete: full scenario hardening, mock_api API-validation matrix, coverage reporting
+
+**Latest commit:** pending.
+
+Continuation of the same session, per explicit instruction to complete all
+tasks not blocked on API quota/live-API approval, and to interrupt and ask
+if genuinely stuck rather than assume approval for anything live-API-related.
+
+### What shipped
+- Sprint 11.1 finished: the remaining 20 scenarios across Schema Compliance
+  (+3), Numeric Precision (+4), Logic Consistency (+4), Idempotency (+3),
+  PII/PCI (+3), and L3 Data Extraction (+3) — full list in `BACKLOG.md`.
+  Caught and fixed one arithmetic error of my own before it shipped:
+  `numeric-precision-multi-step-conversion-006`'s expected_total was
+  originally computed as 868.51; re-derivation via exact integer arithmetic
+  (68464 x 12685 x 10^-6) gave 868.46584 -> 868.47. Fixed before the file
+  was ever used.
+- Sprint 11.2-11.4: full regression (`353 passed, 50 skipped, 0 failed`,
+  math matches exactly: 20 new non-injection scenario files x [3 passed +
+  1 skipped] = +60/+20 from the prior 293/30 baseline). `npx promptfoo
+  validate -c promptfooconfig.js` confirmed all 28 new scenarios load
+  cleanly (`"Configuration is valid."` — a static check, no provider calls,
+  no live-API spend).
+- Sprint 12.1: added `pytest-cov==7.1.0` (verified-working; the plan
+  doc's placeholder pin of 6.0.0 was superseded by the current stable
+  release). Real coverage run: **89% overall** across assertions/mock_api/
+  scripts, published in `docs/metrics.md`. `mock_api/app.py` is now 100%.
+- Sprint 12.2: 6 new tests for `prompts/build_prompt.js` via a Node
+  subprocess bridge (`tests/prompts/_run_build_prompt.js`) — zero API cost,
+  proves the real schema-embedding logic, not a Python reimplementation.
+- Sprint 12.3 + 12.4: 32 new `mock_api` HTTP-layer tests (`docs/sprint11-
+  test-hardening-plan.md` §2A) — request validation (missing/wrong-type/
+  extra fields, invalid currency shapes, malformed JSON, wrong HTTP
+  method), exact-boundary amounts, a real concurrency test (two threads,
+  same idempotency key + reference_id, proves the lock actually
+  serializes), full transfer negative-path parity with debit/refund
+  (same-account, unknown account, daily limit, duplicate, idempotency
+  replay — transfer had none of this since Sprint 9), and an audit-log
+  content test.
+
+### Finding: audit log leaks a PAN-shaped reference_id unmasked
+The audit-log test was written to actually check something, not to pass by
+construction — and it caught a real gap: `mock_api/models.py`'s
+`reference_id` field has no format constraint, and `mock_api/app.py`'s
+`_audit()` logs it verbatim with no masking or pattern check. A caller can
+put a PAN-shaped value into `reference_id` and it lands in the audit log
+unmasked. I did not patch `mock_api`'s core logic to fix this myself —
+changing `_audit()`'s behavior is a product decision (reject PAN-shaped
+`reference_id` values outright vs. redact PAN-shaped substrings before
+logging) that affects existing behavior, not just test coverage, so I
+flagged it instead of assuming a fix. The test is marked
+`pytest.mark.xfail(strict=True, ...)` with the reasoning inline, so it's
+visible in every future test run rather than silently passing or silently
+disappearing.
+
+### A note on this session's tooling
+Partway through, a large single-file edit caused a real data corruption (a
+line in `tests/mock_api/test_mock_api.py` got truncated mid-statement) and
+several subsequent doc/BACKLOG edits weren't landing reliably on first
+attempt. Both were caught by re-verifying file contents directly rather
+than trusting the edit operation's own success report, and fixed before
+any of it was left in a broken state. Every number in this entry and in
+`BACKLOG.md` reflects a real, freshly re-run `pytest` pass over the
+corrected files, not a carried-over or assumed count.
+
+### Verification
+- Full suite: **389 passed, 50 skipped, 1 xfailed, 0 failed** (clean
+  install, same Linux sandbox venv as the prior entry). Delta from the
+  353/50/0 baseline: +36 passed, +1 xfailed — matches 32 new mock_api
+  tests + 6 new build_prompt tests - 2 (one mock_api test relocated into
+  the xfail) = 36, plus the 1 new intentional xfail.
+- `pytest --cov=assertions --cov=mock_api --cov=scripts --cov-report=term-missing`:
+  89% overall, full breakdown in `docs/metrics.md`.
+
+**Not done this session (by design, per explicit instruction):** Sprint 13
+(red-team live smoke run) — needs a quota check and an explicit go-ahead
+immediately before any live Gemini call. GitHub issue mirroring for
+Sprint 11/12/13 — the GitHub connector isn't authorized in this session.
+
+## 2026-07-06 — Sprint 11.1 (partial): Hallucination + Injection negative-case authoring
+
+**Latest commit:** pending.
+
+Independent QA audit requested by Shakti (sr. QA engineer) produced
+`docs/sprint11-test-hardening-plan.md` — a gap analysis against the existing
+9-category scenario library plus a new `mock_api` REST-layer request-
+validation/error-handling matrix (§2A), both approved before any file was
+touched. This entry covers the first authored chunk only.
+
+### What shipped
+- 2 new hallucination scenarios: `hallucination-fabricated-invoice-total-005` (invented total/subtotal), `hallucination-fabricated-fee-rate-006` (invented fee/rate).
+- 3 new direct-injection scenarios: `injection-direct-base64-obfuscated-003`, `injection-direct-multiturn-planted-instruction-004`, `injection-direct-trusted-field-spoof-005`.
+- 3 new document-embedded injection scenarios: `injection-document-embedded-table-cell-instruction-003`, `injection-document-embedded-cross-document-split-004`, `injection-document-embedded-fake-compliance-directive-005`.
+- `BACKLOG.md`: added Sprint 11 (scenario hardening), Sprint 12 (meta-QA + API validation matrix), Sprint 13 (redteam go-live, supersedes the open Sprint 8 checkpoint) sections; ticked the two completed sub-items under 11.1.
+
+### Verification
+- Ran `pytest -q` for real from a clean `pip install -r requirements.txt` (this session's Linux sandbox venv, not the repo's Windows `.venv` — that one points at a Windows-only Python path and doesn't resolve here). **293 passed, 30 skipped, 0 failed.** Prior verified baseline (2026-07-06, `docs/antigravity-review-2026-07-06.md`) was 263 passed / 28 skipped / 0 failed — delta is exactly +30 passed / +2 skipped, matching the expected 4 parametrized scenario-file tests × 8 new files (2 hallucination files skip the injection-only subcategory check, 6 injection files don't), confirming no other regressions were introduced.
+- Not yet run: a smoke-tier (`echo` provider) promptfoo pass to confirm the new files load cleanly into the eval pipeline (Sprint 11.4) — no live/paid-API call made or planned for this chunk.
+
+**Next:** continue Sprint 11.1 with Schema Compliance, Numeric Precision, Logic Consistency, Idempotency, PII/PCI, and L3 Data Extraction chunks per `docs/sprint11-test-hardening-plan.md` §1.
 
 ## 2026-07-05 — Sprints 9 & 10: Mock API Expansion & Dashboard
 
@@ -508,32 +610,4 @@ Added `docs/plan.md` â€” a portable copy of the full design plan (objective
 - Registry JSON validated by the Edit tool (would have failed on malformed JSON) âœ“
 - Not yet done: haven't clicked "Sync from files" / GitHub sync inside the Mission Control UI itself â€” the source files/issues are correct and ready for it, but I didn't drive the app's UI unprompted (see plan assumptions).
 
-**Next:** Sprint 2 â€” risk taxonomy (`docs/test-strategy.md`) and the canonical scenario YAML schema.
-
-## 2026-07-02 â€” Sprint 0: Foundation & Environment âœ…
-
-**Latest commit:** `e73bf0c` on main. Repo live at
-[github.com/shakti-mohapatra/fintech-ai-guard](https://github.com/shakti-mohapatra/fintech-ai-guard) (public).
-
-### What shipped
-
-| File | Change |
-|------|--------|
-| Directory scaffold | `docs/`, `scenarios/{schema,hallucination,injection/{direct,document-embedded},schema-compliance,numeric-precision,logic-consistency,idempotency,pii-pci,l3-data-extraction,tone-disclosure}`, `assertions/`, `tests/`, `mock_api/`, `scripts/`, `reports/`, `logs/`, `.github/workflows/` |
-| `package.json` | npm project + `promptfoo` devDependency (resolved `0.121.17`); `eval`/`eval:smoke`/`view`/`redteam` scripts |
-| `requirements.txt` + `.venv/` | Python 3.12 venv: jsonschema, pyyaml, pydantic, pytest, faker, python-dotenv, fastapi, uvicorn, tenacity, httpx |
-| `assertions/schema_validator.py` | First real assertion: promptfoo `type: python` contract (`get_assert(output, context) -> GradingResult`), validates output against a JSON Schema named via the scenario's `schema_file` var |
-| `scenarios/schema/transfer_request.schema.json` | First JSON Schema (amount/currency/recipient_account/memo) |
-| `tests/test_assertions.py` | 6 pytest cases for `schema_validator` (pass, missing field, wrong type, non-JSON output, missing/nonexistent schema var) |
-| `promptfooconfig.smoke.yaml` | Smoke config using promptfoo's built-in `echo` provider â€” proves the full Nodeâ†’Python assertion pipeline with **no API key required** |
-| `.gitignore`, `.env.example`, `.env`, `LICENSE` (MIT), `.pre-commit-config.yaml` | Project hygiene. `.env` documents `PROMPTFOO_PYTHON` (pinned to the venv) and `PROMPTFOO_PASS_RATE_THRESHOLD` (native CI gating, see Sprint 6) |
-
-### Design decisions
-- Smoke test deliberately uses the `echo` provider instead of a real LLM â€” the goal is de-risking the Nodeâ†”Python handoff (`PROMPTFOO_PYTHON`, venv on PATH, assertion file paths resolved relative to the config dir) before investing in the real 40-55 scenario library, not testing model quality yet.
-- `schema_validator.py` takes its schema path from a per-test `schema_file` var rather than being hardcoded to one schema, so the same assertion file is reused across every structured-output scenario category in Sprint 3.
-
-### Verification
-- `pytest tests/ -v` â†’ 6/6 passed âœ“
-- `promptfoo eval -c promptfooconfig.smoke.yaml` â†’ 1/1 passed, confirmed in a **fresh shell with no manual env export** (i.e. `.env` auto-load works) âœ“
-
-**Next:** Sprint 1 â€” GitHub milestones/issues for the full backlog, register the project in Mission Control.
+**Next:** Sprint 2 â€” risk taxonomy (`docs/test-strategy.md`) and the canoni

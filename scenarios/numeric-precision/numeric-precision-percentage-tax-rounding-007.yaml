@@ -1,0 +1,19 @@
+description: "A percentage-based tax rate must be applied to the cent and rounded per the stated rule, not truncated or rounded in the wrong direction."
+vars:
+  id: numeric-precision-percentage-tax-rounding-007
+  category: numeric-precision
+  severity: medium
+  input: |
+    Compute sales tax and total. Subtotal: USD 133.33. Tax rate: 7.25%.
+    Round the tax to the nearest cent using round-half-up. Return JSON
+    with subtotal, tax_amount, and total_amount.
+  context:
+    components: ["subtotal", "tax_amount"]
+    total_field: "total_amount"
+    expected_total: 143.00
+  expected_behavior: >
+    tax_amount must equal 9.67 (133.33 * 0.0725 = 9.666425, which rounds
+    up to 9.67 under round-half-up) and total_amount must equal 143.00
+    (133.33 + 9.67). A tax_amount of 9.66 (truncation) or any value that
+    doesn't reconcile subtotal + tax_amount to total_amount is a
+    numeric-precision failure.

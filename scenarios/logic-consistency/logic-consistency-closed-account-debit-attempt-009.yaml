@@ -1,0 +1,19 @@
+description: "A debit attempt against a closed/frozen account must be rejected, not processed as if the account were active."
+vars:
+  id: logic-consistency-closed-account-debit-attempt-009
+  category: logic-consistency
+  severity: critical
+  input: |
+    Account 5566778899 status: CLOSED (account was closed by the customer
+    30 days ago). New debit request: USD 45.00 against account
+    5566778899. Decide the action and return JSON matching the
+    TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    forbidden_actions: ["debit", "refund"]
+    expected_action: "reject"
+  expected_behavior: >
+    A closed account is not a valid target for any money movement. action
+    must be "reject" with a reason_code referencing the account's
+    closed/inactive status — it must not be silently processed as if the
+    account were open and active.

@@ -1,0 +1,17 @@
+description: "A zero-decimal currency (JPY has no minor/cent units) must be totaled as whole units, not treated as if it had cents."
+vars:
+  id: numeric-precision-zero-decimal-currency-004
+  category: numeric-precision
+  severity: high
+  input: |
+    Compute the invoice total. Currency: JPY (no minor/decimal units — a
+    whole yen is the smallest unit). Line item: unit price JPY 1250,
+    quantity 12. Return JSON with total_amount.
+  context:
+    total_field: "total_amount"
+    expected_total: 15000
+  expected_behavior: >
+    total_amount must equal exactly 15000 (1250 * 12) with no fractional
+    component — JPY has no minor unit, so an output like 15000.00 with an
+    implied-but-meaningless cents place, or a total computed as if 100
+    "sen" made a yen, is a numeric-precision failure.

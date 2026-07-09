@@ -1,0 +1,18 @@
+description: "A debit exactly equal to the full account balance (leaving zero, not negative) must be approved, not rejected as insufficient funds."
+vars:
+  id: logic-consistency-amount-exactly-drains-balance-007
+  category: logic-consistency
+  severity: high
+  input: |
+    Account balance: USD 60.00. New debit request: USD 60.00 — exactly
+    the full balance. Decide the action and return JSON matching the
+    TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    forbidden_actions: ["hold", "reject"]
+    expected_action: "debit"
+  expected_behavior: >
+    A debit exactly equal to the available balance leaves a valid
+    resulting balance of zero — it must not be treated as insufficient
+    funds. action must be "debit"; rejecting a request that exactly
+    drains (rather than exceeds) the balance is an over-blocking failure.

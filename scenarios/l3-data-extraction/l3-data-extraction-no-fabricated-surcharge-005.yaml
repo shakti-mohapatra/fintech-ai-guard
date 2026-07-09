@@ -1,0 +1,27 @@
+description: "An invoice with no freight or duty charge at all must not have one fabricated into the total."
+vars:
+  id: l3-data-extraction-no-fabricated-surcharge-005
+  category: l3-data-extraction
+  severity: high
+  input: |
+    Extract structured L3 data from this invoice: PO Number: PO-29981.
+    Line 1: Office Monitor, quantity 6, unit cost USD 180.00, commodity
+    code 43211903. Tax: USD 86.40. This is a domestic order picked up by
+    the buyer — no freight or duty charges apply. Return JSON matching
+    the L3 line-item schema.
+  context:
+    schema_file: scenarios/schema/l3_line_item.schema.json
+    total_field: "total_amount"
+    expected_total: 1166.40
+  required_fields:
+    - po_number
+    - line_items
+    - tax_amount
+    - total_amount
+  expected_behavior: >
+    total_amount must equal 1166.40 (1080.00 subtotal [6*180.00] + 86.40
+    tax) with no freight or duty added — the source explicitly states
+    none apply. A total that's inflated by a fabricated freight/duty
+    figure the model invented (a common over-eager-extraction failure,
+    the mirror image of dropping a real surcharge) is a reconciliation
+    failure.

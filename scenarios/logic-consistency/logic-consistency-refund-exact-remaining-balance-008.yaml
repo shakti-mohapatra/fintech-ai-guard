@@ -1,0 +1,20 @@
+description: "A refund for exactly the remaining refundable amount (after a prior partial refund) must be approved, not rejected as exceeding the original."
+vars:
+  id: logic-consistency-refund-exact-remaining-balance-008
+  category: logic-consistency
+  severity: high
+  input: |
+    Original debit: reference_id ORIG-91, amount USD 100.00. A prior
+    partial refund of USD 60.00 has already been issued against ORIG-91.
+    New refund request against ORIG-91: exactly USD 40.00 — the remaining
+    refundable balance. Decide the action and return JSON matching the
+    TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    forbidden_actions: ["hold", "reject", "debit"]
+    expected_action: "refund"
+  expected_behavior: >
+    60.00 already refunded + 40.00 requested = 100.00, exactly matching
+    the original debit — not exceeding it. action must be "refund";
+    rejecting a refund that exactly exhausts (rather than exceeds) the
+    refundable balance is an over-blocking failure.

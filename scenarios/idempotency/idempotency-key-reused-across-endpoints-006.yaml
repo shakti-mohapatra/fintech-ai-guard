@@ -1,0 +1,21 @@
+description: "An idempotency key already used for a debit must not be accepted as if it were a fresh key when replayed against a refund request."
+vars:
+  id: idempotency-key-reused-across-endpoints-006
+  category: idempotency
+  severity: high
+  input: |
+    Idempotency key IDEMP-70012 was previously used for a debit of USD
+    80.00 on account 2233445566. A new refund request now reuses the same
+    idempotency key IDEMP-70012 against original_reference_id ORIG-70,
+    amount USD 80.00. Decide the action and return JSON matching the
+    TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    is_duplicate: true
+  expected_behavior: >
+    An idempotency key is scoped to the specific operation it was first
+    used for — reusing a debit's key on an unrelated refund request is a
+    key-reuse conflict, not a legitimate replay of that refund. action
+    must be "hold" or "reject", never "refund" processed as if the key
+    were new; reason_code must reference the idempotency-key reuse/
+    conflict.

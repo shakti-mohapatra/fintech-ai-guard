@@ -75,3 +75,33 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 
 ## Sprint 10 — Trend Dashboard
 - [x] Build a static dashboard (GitHub Pages or Streamlit) plotting metric trends across reports/ history
+
+## Sprint 11 — Negative & Boundary Scenario Hardening
+Full gap analysis and approved targets: `docs/sprint11-test-hardening-plan.md`.
+- [x] 11.1 Author +28 negative/boundary scenarios across categories 1-9 (chunked per category, not one commit)
+  - [x] Hallucination: +2 (invented total/subtotal, invented fee/rate) — `hallucination-fabricated-invoice-total-005`, `hallucination-fabricated-fee-rate-006`
+  - [x] Injection (direct): +3 (base64-obfuscated, multi-turn planted instruction, trusted-field spoof) — `injection-direct-base64-obfuscated-003`, `injection-direct-multiturn-planted-instruction-004`, `injection-direct-trusted-field-spoof-005`
+  - [x] Injection (document-embedded): +3 (table-cell instruction, cross-document split, fake compliance directive) — `injection-document-embedded-table-cell-instruction-003`, `injection-document-embedded-cross-document-split-004`, `injection-document-embedded-fake-compliance-directive-005`
+  - [x] Schema Compliance: +3 (recipient boundary length, numeric type fidelity, no additional fields) — `schema-compliance-transfer-recipient-boundary-length-004`, `schema-compliance-numeric-type-fidelity-005`, `schema-compliance-no-additional-fields-006`
+  - [x] Numeric Precision: +4 (zero-decimal currency, negative discount, multi-step conversion, percentage-tax rounding) — `numeric-precision-zero-decimal-currency-004`, `numeric-precision-negative-discount-application-005`, `numeric-precision-multi-step-conversion-006`, `numeric-precision-percentage-tax-rounding-007`
+  - [x] Logic Consistency: +4 (exactly-at-limit, exactly-drains-balance, refund-exact-remaining, closed-account) — `logic-consistency-amount-exactly-at-daily-limit-006`, `logic-consistency-amount-exactly-drains-balance-007`, `logic-consistency-refund-exact-remaining-balance-008`, `logic-consistency-closed-account-debit-attempt-009`
+  - [x] Idempotency: +3 (same-key-different-payload, key-reused-across-endpoints, reference-id-reused-different-amount) — `idempotency-same-key-different-payload-005`, `idempotency-key-reused-across-endpoints-006`, `idempotency-reference-id-reused-different-amount-007`
+  - [x] PII/PCI: +3 (IBAN/SWIFT masking, leakage-in-error-message, leakage-in-dispute-narrative) — `pii-pci-iban-swift-masking-004`, `pii-pci-leakage-in-error-message-005`, `pii-pci-no-pan-in-dispute-narrative-006`
+  - [x] L3 Data Extraction: +3 (total-reconciliation-mismatch, fractional-quantity-precision, no-fabricated-surcharge) — `l3-data-extraction-total-reconciliation-mismatch-003`, `l3-data-extraction-fractional-quantity-precision-004`, `l3-data-extraction-no-fabricated-surcharge-005`
+- [x] 11.2 Sanity-tier pytest after each category, full regression at sprint close — final regression: **353 passed, 50 skipped, 0 failed** (verified from a clean `pip install`, see PROGRESS.md)
+- [x] 11.3 Update docs/test-strategy.md / docs/compliance-mapping.md if any new scenario adds a regulatory_ref — none of the new scenarios cite a PCI-DSS clause not already present in `docs/compliance-mapping.md`, so no doc changes were needed
+- [x] 11.4 Confirm new scenarios load into promptfoo cleanly, no live paid-API run — `npx promptfoo validate -c promptfooconfig.js` -> "Configuration is valid." (static config/schema check, makes no provider calls)
+
+## Sprint 12 — Meta-QA Hardening & API Request-Validation/Error-Handling
+Full matrix: `docs/sprint11-test-hardening-plan.md` section 2A.
+- [x] Add pytest-cov, publish coverage % in docs/metrics.md — pinned `pytest-cov==7.1.0` (verified-working, not the plan's placeholder 6.0.0); **89% overall** across assertions/mock_api/scripts
+- [x] Add prompts/build_prompt.js unit tests — 6 new tests via a Node subprocess bridge (`tests/prompts/_run_build_prompt.js`), zero API cost
+- [x] Add ~24 mock_api request-validation/boundary/error-handling/concurrency tests (section 2A) — 32 new test items added (28 unique + 4 parametrized), `mock_api/app.py` now at 100% coverage
+- [x] Add audit-log leakage test tied to new PII/PCI scenario — added; **found a real gap** (see PROGRESS.md), tracked as a documented `xfail`, not silently patched
+
+## Sprint 13 — Red-Team Go-Live (Sprint 8 close-out)
+Code complete since Sprint 8 (`docs/sprint8-implementation-plan.md`); blocked purely on a live-API go-ahead.
+- [ ] 13.1 Confirm current Gemini free-tier quota (direct curl check)
+- [ ] 13.2 Explicit go-ahead ask before `npm run redteam:smoke` — do not auto-run
+- [ ] 13.3 Run generate_redteam_report.py, append findings to evaluation_report.md
+- [ ] 13.4 Tick Sprint 8's `[~]` boxes to `[x]` only after 13.3 is confirmed

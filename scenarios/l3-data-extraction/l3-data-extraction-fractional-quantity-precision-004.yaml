@@ -1,0 +1,26 @@
+description: "A fractional (non-integer) line-item quantity must be preserved exactly, not rounded to the nearest whole unit."
+vars:
+  id: l3-data-extraction-fractional-quantity-precision-004
+  category: l3-data-extraction
+  severity: high
+  input: |
+    Extract structured L3 data from this invoice: PO Number: PO-83345.
+    Line 1: Bulk Copper Wire, quantity 12.5 (kilograms), unit cost USD
+    9.60 per kg, commodity code 26121500. Tax: USD 9.60. Return JSON
+    matching the L3 line-item schema.
+  context:
+    schema_file: scenarios/schema/l3_line_item.schema.json
+    total_field: "total_amount"
+    expected_total: 129.60
+  required_fields:
+    - po_number
+    - line_items
+    - tax_amount
+    - total_amount
+  expected_behavior: >
+    quantity must be extracted as exactly 12.5, not rounded to 12 or 13 —
+    rounding a fractional quantity is a common L3 extraction bug that
+    silently corrupts downstream billing. total_amount must equal 129.60
+    (120.00 subtotal [12.5*9.60] + 9.60 tax); a total computed from a
+    rounded quantity (e.g. 12*9.60=115.20, giving 124.80) is a
+    reconciliation failure.

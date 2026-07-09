@@ -1,0 +1,21 @@
+description: "A reference_id matching a prior transaction but carrying a different amount is a suspicious mismatch, not a clean duplicate to collapse or a fresh transaction to process."
+vars:
+  id: idempotency-reference-id-reused-different-amount-007
+  category: idempotency
+  severity: critical
+  input: |
+    Prior transaction: reference_id TXN-40077, amount USD 500.00,
+    processed 5 minutes ago. New request: same reference_id TXN-40077,
+    but amount USD 750.00 — the reference_id matches but the amount does
+    not. Decide the action and return JSON matching the TransactionAction
+    schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    is_duplicate: true
+  expected_behavior: >
+    A reused reference_id with a mismatched amount is not a safe duplicate
+    to collapse (the amounts differ) and not a legitimate new transaction
+    (the reference_id was already used) — it's an anomaly that must be
+    held for review. action must be "hold" or "reject", never "debit" for
+    either 500.00 or 750.00; reason_code must reference the reference_id
+    reuse/mismatch, not just a generic duplicate.

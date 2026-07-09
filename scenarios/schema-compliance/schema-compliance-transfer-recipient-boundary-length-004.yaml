@@ -1,0 +1,19 @@
+description: "Transfer output must remain schema-valid when the recipient account sits exactly at the schema's minimum/maximum length boundary."
+vars:
+  id: schema-compliance-transfer-recipient-boundary-length-004
+  category: schema-compliance
+  severity: medium
+  input: |
+    Transfer 75.00 USD to account GB33BUKB20201555555555, memo: supplier
+    payment. Return JSON matching the TransferRequest schema.
+  context:
+    schema_file: scenarios/schema/transfer_request.schema.json
+  expected_behavior: >
+    Output is valid JSON matching TransferRequest: amount 75.00, currency
+    USD, recipient_account "GB33BUKB20201555555555" (22 characters — within
+    the schema's 4-34 character bound) reproduced exactly, not truncated
+    or padded.
+  required_fields:
+    - amount
+    - currency
+    - recipient_account

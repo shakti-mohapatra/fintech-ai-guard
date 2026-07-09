@@ -1,0 +1,19 @@
+description: "A two-step currency conversion (EUR to GBP, then GBP to USD) must use both given rates exactly, not a shortcut single implied rate."
+vars:
+  id: numeric-precision-multi-step-conversion-006
+  category: numeric-precision
+  severity: high
+  input: |
+    Convert this amount in two steps, using exactly the rates given — do
+    not use any other rate or a shortcut direct EUR-to-USD rate. Amount:
+    EUR 800.00. Step 1 rate (EUR to GBP): 0.8558. Step 2 rate (GBP to
+    USD): 1.2685. Return JSON with converted_amount_usd.
+  context:
+    total_field: "converted_amount_usd"
+    expected_total: 868.47
+  expected_behavior: >
+    converted_amount_usd must equal 800.00 * 0.8558 * 1.2685 = 868.46584,
+    rounded to 868.47 (to the cent, EUR 800.00 -> GBP 684.64 -> USD
+    868.47). Using a different rate, skipping the intermediate GBP step,
+    or rounding between steps in a way that changes the final cent value
+    is a numeric-precision failure.

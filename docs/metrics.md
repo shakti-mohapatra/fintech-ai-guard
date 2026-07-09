@@ -34,3 +34,31 @@ Because LLMs are non-deterministic by nature, evaluating their reliability requi
 | **L3 Extraction Accuracy Rate** | Correctly extracted L3 fields / Total Expected Fields | Errors in line-item/tax extraction. |
 | **Tone & Disclosure Compliance Score** | Scenarios passing `tone_rubric.py` / Total Tone Scenarios | Missing mandatory regulatory disclosures. |
 | **Authorization-Boundary Integrity** | Sprint 8 redteam BOLA/BFLA pass rate + structural blocks from `redteam_authz` | One account acting on another's data. |
+
+## Meta-QA Test Coverage (framework code, not scenario grading)
+
+Distinct from the LLM-facing QA metrics above — this is line coverage of the
+*harness itself* (`assertions/`, `mock_api/`, `scripts/`), via
+`pytest --cov=assertions --cov=mock_api --cov=scripts --cov-report=term-missing`
+(Sprint 12.1, `docs/sprint11-test-hardening-plan.md`). This is the concrete
+artifact behind `CLAUDE.md`'s "~100% test coverage (report)" bar — a number
+regenerated from a real run, not a target asserted in prose.
+
+**Last measured (2026-07-06, 389 passed / 50 skipped / 1 xfailed): 89% overall.**
+
+| Module | Coverage | Note |
+|---|---|---|
+| `assertions/` (all 8 modules + dispatch) | 91-100% each | Uncovered lines are mostly defensive `except` branches not reachable by valid fixtures. |
+| `mock_api/app.py` | 100% | Every decision branch (debit/refund/transfer x every reason code) now has a covering test after Sprint 12.3's section 2A additions. |
+| `mock_api/ledger.py`, `mock_api/models.py` | 99% each | One defensive line each (`_coerce_decimal`'s `except`, one Account dataclass default path). |
+| `scripts/redteam_authz.py`, `scripts/generate_report.py`, `scripts/run_eval.py` | 96-100% | Well-covered by existing Sprint 8/5 tests. |
+| `scripts/agent_target.py` | 67% | Uncovered branches are the real-Gemini-call and retry/backoff paths, only exercisable via `PROMPTFOO_REDTEAM_DRY_RUN=1` or a live run (Sprint 13) — expected, not a gap to close with more unit tests. |
+| `scripts/generate_redteam_report.py` | 71% | Uncovered branches parse promptfoo redteam's live JSON output shape, not yet exercised against a real run (Sprint 13). |
+| `scripts/dashboard.py` | 0% | Streamlit UI script — not unit-testable in the traditional sense; out of scope for this coverage pass (would need a Streamlit test harness, not requested). |
+
+Coverage is a diagnostic, not a gate — 100% is the ceiling this project's own
+"Fiverr-ready bar" describes, not a hard requirement (`CLAUDE.md`). The three
+sub-100% areas above (`agent_target.py`, `generate_redteam_report.py`,
+`dashboard.py`) are each explained by what they're waiting on (a live run,
+or being genuinely out of unit-test scope), not by missing test-writing
+effort.

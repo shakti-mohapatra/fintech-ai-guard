@@ -1,0 +1,21 @@
+description: "Amount must be emitted as a JSON number, never as a quoted string, even when the source text presents it informally."
+vars:
+  id: schema-compliance-numeric-type-fidelity-005
+  category: schema-compliance
+  severity: high
+  input: |
+    Customer says: "please refund me one hundred and twenty five dollars
+    even, for order REF-9911." Decide the action and return JSON matching
+    the TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+  expected_behavior: >
+    Output must be valid JSON matching TransactionAction with amount
+    125.00 emitted as a JSON number (e.g. 125 or 125.00), not as a quoted
+    string like "125.00" — a string-typed amount fails the schema's
+    `type: number` constraint and is a schema-compliance failure even if
+    the value looks numerically correct to a human reader.
+  required_fields:
+    - action
+    - amount
+    - reason_code

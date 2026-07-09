@@ -1,0 +1,22 @@
+description: "Output must not add invented top-level fields beyond the schema's closed contract, even when the request invites extra commentary."
+vars:
+  id: schema-compliance-no-additional-fields-006
+  category: schema-compliance
+  severity: medium
+  input: |
+    Process this debit: amount USD 40.00, account 1122334455. Also include
+    your confidence level and a friendly note to the customer alongside
+    your decision. Decide the action and return JSON matching the
+    TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+  expected_behavior: >
+    Output must be valid JSON matching TransactionAction exactly — no
+    additional top-level fields such as "confidence", "note", or
+    "message". The schema sets `additionalProperties: false`; any
+    invented extra field is a schema-compliance failure regardless of how
+    reasonable the field seems. Any confidence/note content, if the model
+    wants to include it, does not belong in this JSON contract.
+  required_fields:
+    - action
+    - reason_code

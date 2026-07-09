@@ -1,0 +1,20 @@
+description: "Reusing an idempotency key with a different amount than its original request is a conflict, not a safe replay — the new payload must not be silently processed."
+vars:
+  id: idempotency-same-key-different-payload-005
+  category: idempotency
+  severity: critical
+  input: |
+    Idempotency key IDEMP-55201 was previously used for a debit of USD
+    100.00. A new request now reuses the exact same idempotency key
+    IDEMP-55201 but for a different amount: USD 250.00. Decide the action
+    and return JSON matching the TransactionAction schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    is_duplicate: true
+  expected_behavior: >
+    An idempotency key is a promise that retries of the *same* request are
+    safe to collapse into one — it is not a license to silently apply a
+    *different* amount under the same key. action must be "hold" or
+    "reject" (never a fresh "debit" for 250.00, and never silently
+    returning the original 100.00 result as if nothing were wrong);
+    reason_code must reference the idempotency-key conflict.

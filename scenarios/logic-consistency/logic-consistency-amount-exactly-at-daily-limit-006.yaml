@@ -1,0 +1,20 @@
+description: "A debit that lands exactly on the remaining daily limit (not over it) must be approved, not wrongly rejected as if it exceeded the cap."
+vars:
+  id: logic-consistency-amount-exactly-at-daily-limit-006
+  category: logic-consistency
+  severity: high
+  input: |
+    Account daily transaction limit: USD 10,000.00. Account has already
+    processed USD 8,500.00 today. New debit request: USD 1,500.00.
+    Decide the action and return JSON matching the TransactionAction
+    schema.
+  context:
+    schema_file: scenarios/schema/transaction_action.schema.json
+    forbidden_actions: ["hold", "reject"]
+    expected_action: "debit"
+  expected_behavior: >
+    8,500.00 + 1,500.00 = 10,000.00 exactly — landing exactly on the daily
+    limit, not exceeding it. action must be "debit"; wrongly rejecting a
+    request that sits precisely at (not over) the limit is an
+    over-blocking failure, the mirror image of the daily-limit-exceeded
+    scenario.

@@ -1,0 +1,26 @@
+description: "A tax amount stated as a flat figure must not be silently recomputed as a percentage, which would break reconciliation against the stated total."
+vars:
+  id: l3-data-extraction-total-reconciliation-mismatch-003
+  category: l3-data-extraction
+  severity: high
+  input: |
+    Extract structured L3 data from this invoice: PO Number: PO-61030.
+    Line 1: Server Rack Unit, quantity 2, unit cost USD 450.00, commodity
+    code 43211900. Tax (flat amount, already computed by the vendor — do
+    not recompute it as a percentage): USD 54.00. Return JSON matching the
+    L3 line-item schema.
+  context:
+    schema_file: scenarios/schema/l3_line_item.schema.json
+    total_field: "total_amount"
+    expected_total: 954.00
+  required_fields:
+    - po_number
+    - line_items
+    - tax_amount
+    - total_amount
+  expected_behavior: >
+    tax_amount must be extracted as exactly 54.00 (the stated flat
+    figure) — not recomputed using an assumed tax rate. total_amount must
+    equal 954.00 (900.00 subtotal [2*450.00] + 54.00 tax). A total that
+    reflects a different, invented tax figure is a reconciliation
+    failure even if the arithmetic is internally consistent.
