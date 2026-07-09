@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from decimal import Decimal
 
 from fastapi import FastAPI, HTTPException
@@ -49,12 +50,45 @@ if not logger.handlers:
 app = FastAPI(title="Fintech-AI-Guard Mock API", version="0.1.0")
 
 
+# reference_id is a free-form opaque string (mock_api/models.py has no card-
+# number field), so a caller can put a PAN-shaped value in it. Mask it before
+# it reaches the audit log using this repo's existing PAN-detection
+# convention (assertions/pii_leakage.py: digit-run + Luhn check, PCI-DSS
+# Req-3.3 truncated display — first 6 / last 4 visible). Duplicated locally
+# rather than imported: mock_api is the runtime app under test, assertions/
+# is the eval-grading package, and app code shouldn't depend on it.
+_DIGIT_RUN = re.compile(r"(?:\d[ -]?){13,19}")
+
+
+def _luhn_valid(digits: str) -> bool:
+    total = 0
+    for i, ch in enumerate(reversed(digits)):
+        d = int(ch)
+        if i % 2 == 1:
+            d *= 2
+            if d > 9:
+                d -= 9
+        total += d
+    return total % 10 == 0
+
+
+def _mask_pan_shaped(value: str) -> str:
+    def _mask(match: re.Match) -> str:
+        raw = match.group(0)
+        digits = re.sub(r"[^\d]", "", raw)
+        if 13 <= len(digits) <= 19 and _luhn_valid(digits):
+            return digits[:6] + "*" * (len(digits) - 10) + digits[-4:]
+        return raw
+
+    return _DIGIT_RUN.sub(_mask, value)
+
+
 def _audit(endpoint: str, request_ref: str, response: TransactionResponse) -> None:
     logger.info(
         json.dumps(
             {
                 "endpoint": endpoint,
-                "reference_id": request_ref,
+                "reference_id": _mask_pan_shaped(request_ref),
                 "account_id": response.account_id,
                 "action": response.action.value,
                 "reason_code": response.reason_code.value,

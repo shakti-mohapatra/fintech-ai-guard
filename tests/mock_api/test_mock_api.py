@@ -676,26 +676,11 @@ def test_transfer_idempotency_key_replay_does_not_double_move_funds():
 
 # --- audit log content: no unmasked PAN/CVV-shaped pattern, ever -----------
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "KNOWN FINDING (2026-07-06, docs/sprint11-test-hardening-plan.md sec2A): "
-        "reference_id has no format constraint in mock_api/models.py, and "
-        "mock_api/app.py _audit() logs it verbatim with no masking/redaction. "
-        "A caller can put a PAN-shaped value in reference_id and it will be "
-        "written to the audit log unmasked. Left as a tracked xfail (not "
-        "silently fixed) pending a product decision: reject PAN-shaped "
-        "reference_id values, or redact PAN-shaped substrings in _audit() "
-        "before logging. See PROGRESS.md."
-    ),
-)
 def test_audit_log_never_echoes_a_pan_shaped_reference_id_unmasked(caplog):
     # reference_id is a free-form opaque string per mock_api/models.py — there
-    # is no dedicated "card number" field on DebitRequest. This test checks
-    # what actually happens if a caller puts a PAN-shaped value into the one
-    # unconstrained string field that _audit() logs verbatim, since nothing
-    # in the request schema stops that from happening. See PROGRESS.md for
-    # what this test found.
+    # is no dedicated "card number" field on DebitRequest. A caller can put a
+    # PAN-shaped value in it, so _audit() must mask it (fixed 2026-07-09,
+    # see docs/sprint11-test-hardening-plan.md §2A and PROGRESS.md).
     pan_shaped_reference = "4111111111111111"
     with caplog.at_level(logging.INFO, logger="mock_api.audit"):
         client.post(
@@ -709,8 +694,29 @@ def test_audit_log_never_echoes_a_pan_shaped_reference_id_unmasked(caplog):
         )
     log_text = caplog.text
     assert pan_shaped_reference not in log_text, (
-        "mock_api's audit log echoed a PAN-shaped reference_id verbatim — "
-        "reference_id has no format constraint and _audit() does not mask "
-        "or reject PAN-shaped values placed in it (see docs/sprint11-test-"
-        "hardening-plan.md §2A and PROGRESS.md for the finding)."
+        "mock_api's audit log echoed a PAN-shaped reference_id verbatim."
+    )
+    assert "411111******1111" in log_text, (
+        "expected the PAN-shaped reference_id to appear masked (first 6 / "
+        "last 4 visible, PCI-DSS Req-3.3 truncated-display convention)."
+    )
+
+
+def test_audit_log_leaves_a_non_pan_digit_reference_id_unmasked(caplog):
+    # A 16-digit reference_id that fails the Luhn check is an ordinary
+    # opaque reference, not a card number — must pass through untouched so
+    # the masking fix doesn't over-mask legitimate non-PAN references.
+    non_pan_reference = "1234567890123456"
+    with caplog.at_level(logging.INFO, logger="mock_api.audit"):
+        client.post(
+            "/debit",
+            json={
+                "account_id": "ACC-1001",
+                "amount": "10.00",
+                "currency": "USD",
+                "reference_id": non_pan_reference,
+            },
+        )
+    assert non_pan_reference in caplog.text, (
+        "a Luhn-invalid digit-shaped reference_id should not be masked."
     )
