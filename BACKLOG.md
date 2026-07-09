@@ -65,9 +65,9 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Add the synthetic-data-only disclaimer to README and docs
 
 ## Sprint 8 — Red-Teaming
-- [~] Wire promptfoo redteam for injection, jailbreak, PII, and excessive-agency plugins
-- [~] Wire BFLA/BOLA redteam plugins against the mock API
-- [~] Document red-team findings in a dedicated report section
+- [~] Wire promptfoo redteam for injection, jailbreak, PII, and excessive-agency plugins — PII (4 subcategories) + excessive-agency ran live and passed; `indirect-prompt-injection` failed validation (`config.indirectInjectionVar` not set, see Sprint 13 smoke run) and was skipped; `jailbreak` was never added to the smoke config at all. Still partial, not closing this box — see Sprint 14.
+- [x] Wire BFLA/BOLA redteam plugins against the mock API — both ran live 2026-07-09, 1/1 passed each. Caveat: no `redteam.authz` log file was captured this run (logger is stderr-only, not piped to a file), so the "structural block" column in `evaluation_report.md` shows an honest 0/mismatch rather than an independently-confirmed block count — LLM-judge pass only.
+- [x] Document red-team findings in a dedicated report section — `evaluation_report.md` § Red-Team Findings, from `eval-Ob2-2026-07-09T08:20:44`
 
 ## Sprint 9 — Full Agentic Mock-API Buildout
 - [x] Expand mock_api with balance checks and multi-step transfer flows
@@ -101,7 +101,12 @@ Full matrix: `docs/sprint11-test-hardening-plan.md` section 2A.
 
 ## Sprint 13 — Red-Team Go-Live (Sprint 8 close-out)
 Code complete since Sprint 8 (`docs/sprint8-implementation-plan.md`); blocked purely on a live-API go-ahead.
-- [ ] 13.1 Confirm current Gemini free-tier quota (direct curl check)
-- [ ] 13.2 Explicit go-ahead ask before `npm run redteam:smoke` — do not auto-run
-- [ ] 13.3 Run generate_redteam_report.py, append findings to evaluation_report.md
-- [ ] 13.4 Tick Sprint 8's `[~]` boxes to `[x]` only after 13.3 is confirmed
+- [x] 13.1 Confirm current Gemini free-tier quota (direct curl check) — 2026-07-09, live curl to `gemini-2.5-flash:generateContent` returned 200 (first attempt hit a transient 503, retried)
+- [x] 13.2 Explicit go-ahead ask before running the redteam scan — user approved 2026-07-09; ran via `promptfoo redteam run` (not `npm run redteam:smoke`/`redteam eval`, which don't generate adversarial test cases — see Sprint 14)
+- [x] 13.3 Run generate_redteam_report.py, append findings to evaluation_report.md — fixed a real bug in the script first (it read `vars.pluginId`, but promptfoo's export puts it at `result.metadata.pluginId` — every row was rendering as `(unknown plugin)`); regression-tested (`tests/scripts/test_generate_redteam_report.py`, 3/3 pass) before trusting the output
+- [x] 13.4 Tick Sprint 8's boxes — done above; `indirect-prompt-injection` and `jailbreak` gaps intentionally left open rather than papered over, tracked as Sprint 14
+
+## Sprint 14 — Red-Team Coverage Gaps (found during Sprint 13's live run)
+- [ ] Fix `indirect-prompt-injection` plugin: set `config.indirectInjectionVar` in `promptfooconfig.redteam.smoke.yaml` (and the full config) so it actually generates instead of silently skipping
+- [ ] Add a `jailbreak` plugin entry to the smoke config — it was never included, despite Sprint 8's original scope naming it
+- [ ] Pipe `redteam.authz`'s logger to a file (currently stderr-only) so BOLA/BFLA structural blocks can be independently confirmed against the LLM-judge verdict, not just asserted

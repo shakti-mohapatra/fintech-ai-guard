@@ -32,8 +32,8 @@ def compute_redteam_metrics(export: dict, authz_blocks: int = 0) -> dict:
     
     for r in results:
         v = r.get("vars", {})
-        # Redteam output usually has pluginId or similar in vars or grading
-        plugin = v.get("pluginId") or r.get("pluginId") or v.get("plugin") or "(unknown plugin)"
+        meta = r.get("metadata", {})
+        plugin = meta.get("pluginId") or v.get("pluginId") or r.get("pluginId") or v.get("plugin") or "(unknown plugin)"
         
         bucket = plugins_summary.setdefault(plugin, {"total": 0, "passed": 0, "failed": 0})
         bucket["total"] += 1

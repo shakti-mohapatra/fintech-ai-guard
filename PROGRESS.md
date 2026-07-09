@@ -3,10 +3,59 @@
 ## Current Status: Pending / Blocked Tasks
 - **Sprint 5**: `Snapshot the first curated run` -> Blocked on Gemini free-tier quota limits (20 req/day).
 - **Sprint 6**: `Configure GitHub Actions repo secrets` -> Manual task for user (add API keys).
-- **Sprint 8 / Sprint 13**: `Live redteam smoke run` -> Blocked on Gemini quota limits + requires an explicit go-ahead at execution time (see `docs/sprint11-test-hardening-plan.md` §3). Not started this session per explicit instruction not to touch live APIs without being asked.
 - **Sprint 9**: `Author richer function-calling scenarios` -> Reverted 2026-07-06 during review, needs real design; see `docs/antigravity-review-2026-07-06.md`.
+- **Sprint 14** (new, found during Sprint 13): `indirect-prompt-injection` plugin misconfigured (missing `config.indirectInjectionVar`), never actually ran; `jailbreak` plugin never added to the smoke config at all; BOLA/BFLA structural blocks aren't independently log-confirmed (authz logger is stderr-only).
 - **Open finding (2026-07-06)**: `mock_api`'s audit log echoes a PAN-shaped `reference_id` unmasked — tracked as a documented `xfail`, needs a product decision (reject vs. redact). See the 2026-07-06 Sprint 12 entry below.
-*Sprints 0-4, 7, 11, 12 fully complete. Sprint 9's transfer endpoint and Sprint 10's dashboard complete. GitHub issue mirroring for Sprint 11/12/13 is pending — the GitHub connector isn't authorized in this session; BACKLOG.md/PROGRESS.md are the source of truth in the meantime. The 2026-07-05 entries below were self-reported by Antigravity and initially wrong (see inline strikethroughs) — corrected 2026-07-06 after independent re-verification; full findings in `docs/antigravity-review-2026-07-06.md`.*
+*Sprints 0-4, 7, 11, 12, 13 fully complete. Sprint 9's transfer endpoint and Sprint 10's dashboard complete. GitHub issue mirroring for Sprint 11/12/13 is pending — the GitHub connector isn't authorized in this session; BACKLOG.md/PROGRESS.md are the source of truth in the meantime. The 2026-07-05 entries below were self-reported by Antigravity and initially wrong (see inline strikethroughs) — corrected 2026-07-06 after independent re-verification; full findings in `docs/antigravity-review-2026-07-06.md`.*
+
+## 2026-07-09 — Sprint 13: Red-Team Go-Live
+
+Ran with explicit user go-ahead after confirming this was promptfoo's free
+cloud test-generation tier (email-gated, not payment-gated — verified by
+reading `node_modules/promptfoo/dist/src/accounts-*.js` before recommending
+it) and after confirming live Gemini quota via direct curl (first attempt
+hit a transient 503, retried, got a real 200).
+
+`npm run redteam:smoke` (`promptfoo redteam eval`) turned out to be the
+wrong command — it silently ran 0 adversarial cases because the config's
+`redteam:` section had never been through `promptfoo redteam generate`.
+Used `promptfoo redteam run` instead (generate + eval in one step, per
+promptfoo's own `--help`). `package.json`'s `redteam:smoke`/`redteam:full`
+scripts still point at the eval-only form — left as-is rather than
+overwritten silently, tracked as a Sprint 14 candidate.
+
+Also hit and fixed a real `PYTHONPATH` bug: promptfoo's Python worker
+loads `scripts/agent_target.py` via `spec_from_file_location`, which puts
+`scripts/` (not the project root) on `sys.path[0]`, breaking
+`from scripts.redteam_authz import ...` and the `mock_api` imports with
+`ModuleNotFoundError`. Fixed by adding `PYTHONPATH=.` to `.env` (untracked,
+user's local file) and `.env.example` (committed, documents the fix for
+future setup).
+
+**Live run:** `eval-Ob2-2026-07-09T08:20:44`, 7 test cases (bola, bfla,
+excessive-agency, pii:api-db, pii:direct, pii:session, pii:social —
+`indirect-prompt-injection` failed validation and was skipped, see
+Sprint 14). **7/7 passed (100%).** Exported to
+`reports/redteam-smoke-eval-Ob2-2026-07-09.json`.
+
+Found and fixed a real bug in `scripts/generate_redteam_report.py` before
+trusting its output: it read `vars.pluginId`, but promptfoo's actual export
+puts the plugin id at `result.metadata.pluginId` — every row silently
+rendered as `(unknown plugin)`. The project's own test fixtures
+(`tests/scripts/test_generate_redteam_report.py`) already used the correct
+shape, so the bug was in the parsing code, not the tests. Fixed the one
+line, reran the 3 existing tests (3/3 pass) before regenerating
+`evaluation_report.md`'s Red-Team Findings table for real.
+
+No authz log file exists for this run — `scripts/redteam_authz.py`'s
+logger is stderr-only, never piped to a file, so the "Structural Blocks"
+column in `evaluation_report.md` correctly shows an honest 0/⚠️-mismatch
+for `bola`/`bfla` rather than a fabricated block count. The LLM-judge
+verdict (pass) is real; independent structural confirmation is not yet
+wired up. Tracked as Sprint 14.
+
+**Quota:** curl check (1) + this run's generation+eval calls. Well under
+the 20/day `gemini-2.5-flash` free-tier cap.
 
 ## 2026-07-06 — Sprint 11 + Sprint 12 complete: full scenario hardening, mock_api API-validation matrix, coverage reporting
 

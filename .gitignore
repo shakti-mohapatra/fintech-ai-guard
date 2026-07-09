@@ -16,6 +16,15 @@ __pycache__/
 # promptfoo
 .promptfoo/
 
+# promptfoo redteam artifacts — both embed the generating account's email
+# (comment header / "author" field), regenerate on every run, repo is public
+redteam.yaml
+reports/redteam-*.json
+
+# pytest-cov
+.coverage
+.coverage.*
+
 # Raw promptfoo JSON exports — regenerable via scripts/run_eval.py; the
 # curated markdown scripts/generate_report.py writes into reports/ (not
 # reports/raw/) is the actual historical record (docs/plan.md).
