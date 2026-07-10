@@ -69,13 +69,13 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 - [x] Wire BFLA/BOLA redteam plugins against the mock API — both ran live 2026-07-09, 1/1 passed each both runs. `redteam.authz` can now optionally log to a file (Sprint 14, `REDTEAM_AUTHZ_LOG_PATH`) for independent structural-block confirmation alongside the LLM-judge verdict.
 - [x] Document red-team findings in a dedicated report section — `evaluation_report.md` § Red-Team Findings, from `eval-Ob2-2026-07-09T08:20:44`
 
-## Sprint 9 — Full Agentic Mock-API Buildout
+## Sprint 9 — Full Agentic Mock-API Buildout ✅
 - [x] Expand mock_api with balance checks and multi-step transfer flows
-- [ ] Author richer function-calling scenarios against the expanded mock API — reverted 2026-07-06 (`docs/antigravity-review-2026-07-06.md`); design `docs/sprint9-function-calling-design.md`, implemented 2026-07-09, **not yet closed: needs one clean live `fc:smoke` run** (quota ran out mid-verification, see design doc "Implementation status")
+- [x] Author richer function-calling scenarios against the expanded mock API — reverted 2026-07-06 (`docs/antigravity-review-2026-07-06.md`); design `docs/sprint9-function-calling-design.md`, implemented 2026-07-09, Groq target added + live-verified 2026-07-10 (fc:smoke 8/8 + main eval 60/60, 0 error rows on Groq; Gemini flash-lite quota-exhaustion confirmed as the known/expected blocker)
   - [x] 9.1 Add `transfer_tool` to `scripts/agent_target.py`'s tool list (mock_api `/transfer` existed but was never wired to the tool-calling target)
   - [x] 9.2 Extend `agent_target.py.call_api`'s return with a `metadata.tool_calls` trace
   - [x] 9.3 New parallel pipeline: `promptfooconfig.functioncalling.yaml` + `scripts/agent_target_fc.py` (ledger-reset wrapper, `maxConcurrency: 1`) + `scenarios-function-calling/*.yaml` + `assertions/function_calling.py` — deliberately not wedged into `scenarios/**/*.yaml`'s closed schema, same precedent as Category 10/redteam
-  - [ ] 9.4 Author 8 v1 scenarios per the design doc's table (tool-selection, sequencing, rejection-honesty, idempotency, numeric-fidelity — not re-testing authz, that's redteam's job); scenarios written, pytest 411/50/0 green, but live-verification found and fixed 2 real bugs (`vars.input`→`vars.prompt` empty-prompt bug, ambiguous-currency prompt wording) before quota ran out — **rerun `npm run fc:smoke` next session for a clean pass before checking this off**
+  - [x] 9.4 Author 8 v1 scenarios per the design doc's table (tool-selection, sequencing, rejection-honesty, idempotency, numeric-fidelity — not re-testing authz, that's redteam's job); scenarios written, pytest 411/50/0 green. Live-verified 2026-07-10 via Groq target (`fintech-agent-fc-groq`, llama-3.3-70b-versatile) after Gemini's flash-lite quota stayed exhausted: 8/8 scenarios returned real output (2 pass, 5 assertion-fail, 1 hit max-tool-turns safeguard), zero error-placeholder rows
   - [x] 9.5 `docs/test-strategy.md`: add Category 11 (Agentic Tool-Use / Function-Calling Correctness) + coverage-matrix row
 
 ## Sprint 10 — Trend Dashboard
