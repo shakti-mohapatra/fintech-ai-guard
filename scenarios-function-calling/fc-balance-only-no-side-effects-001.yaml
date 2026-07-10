@@ -1,0 +1,10 @@
+description: "A balance-only request must trigger exactly one balance_tool call and no others -- the model must not proactively debit, refund, or transfer when nothing was asked beyond checking the balance."
+vars:
+  id: fc-balance-only-no-side-effects-001
+  prompt: "What's my current account balance?"
+  expected_tools:
+    - balance_tool
+  tool_order_matters: true
+  ledger_checks:
+    - account_id: ACC-1001
+      expected_balance_minor: 100000

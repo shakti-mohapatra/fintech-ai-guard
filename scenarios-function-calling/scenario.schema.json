@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scenario.schema.json",
+  "title": "FintechAIGuardFunctionCallingScenario",
+  "description": "Canonical shape for scenarios/**/*.yaml under scenarios-function-calling/ (risk-taxonomy Category 11, docs/test-strategy.md). Deliberately a separate, parallel schema from scenarios/scenario.schema.json -- this pipeline targets scripts/agent_target_fc.py (real tool execution against mock_api) via promptfooconfig.functioncalling.yaml, not the text-only main eval, so it needs different ground-truth fields (tool-call trace, real ledger balances) instead of expected_behavior prose. See docs/sprint9-function-calling-design.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["description", "vars"],
+  "properties": {
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable summary of what this scenario tests and why. promptfoo's native per-test description field."
+    },
+    "vars": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prompt", "expected_tools"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^fc-[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Unique kebab-case identifier, prefixed fc- to distinguish from the categories-1-9 scenario id space."
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The user message sent as the initial prompt to scripts/agent_target_fc.py (which internally loops up to 5 turns against real tool calls). MUST be named 'prompt', not 'input': this config has no prompts: block (the target is a raw custom Python provider), so promptfoo's implicit default template is literally {{prompt}} -- any other var name renders as an empty string and silently sends '' to the model. Confirmed live 2026-07-09: the first run of this suite used 'input' and every scenario sent an empty prompt, which the model filled with hallucinated generic small talk instead of erroring."
+        },
+        "expected_tools": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["balance_tool", "debit_tool", "refund_tool", "transfer_tool"] },
+          "description": "The tool calls the model must make -- and no others. Compared against the real captured trace as an exact multiset (or an exact sequence if tool_order_matters is true), so listing transfer_tool once and having the model call it twice is a failure, not a pass."
+        },
+        "tool_order_matters": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, expected_tools must match the real trace's order exactly, not just its multiset."
+        },
+        "ledger_checks": {
+          "type": "array",
+          "default": [],
+          "description": "Real post-run mock_api balances to verify (via scripts/agent_target_fc.py's ledger_after snapshot), independent of what the model's text claims.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["account_id", "expected_balance_minor"],
+            "properties": {
+              "account_id": { "type": "string" },
+              "expected_balance_minor": {
+                "type": "integer",
+                "description": "Absolute expected balance in minor units (cents). Safe to hardcode: mock_api/ledger.py's seed is a fixed constant and agent_target_fc.py resets it before every scenario, so every scenario starts from the identical known state regardless of run order."
+              }
+            }
+          }
+        },
+        "forbidden_patterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Regexes that must NOT appear in the model's final text -- e.g. claiming success after a real tool rejection."
+        },
+        "required_patterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Regexes that MUST appear in the model's final text -- e.g. the real resulting_balance figure, to catch numeric drift between the tool response and the model's own narration of it."
+        }
+      }
+    }
+  }
+}

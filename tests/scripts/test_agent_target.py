@@ -1,3 +1,4 @@
+import json
 import pytest
 import os
 import sys
@@ -55,3 +56,29 @@ def test_429_simulated_error_dry_run():
     assert "error" in result
     assert "API Error" in result["error"]
     assert "Quota exhausted" in result["error"]
+
+def test_transfer_tool_call_dry_run():
+    result = call_api("transfer-test", {}, {})
+
+    assert "output" in result
+    assert result["output"] == "Action completed."
+    assert violation_count() == 0
+
+    # Real ledger side effect: ACC-1001 -$10, ACC-LOW +$10 (1000 minor units)
+    assert ledger.get_account("ACC-1001").balance_minor == 100_000 - 1000
+    assert ledger.get_account("ACC-LOW").balance_minor == 1_000 + 1000
+
+def test_call_api_returns_tool_call_trace_metadata():
+    result = call_api("transfer-test", {}, {})
+
+    assert "metadata" in result
+    trace = result["metadata"]["tool_calls"]
+    assert len(trace) == 1
+    assert trace[0]["name"] == "transfer_tool"
+    assert trace[0]["args"]["destination_account_id"] == "ACC-LOW"
+    tool_result = json.loads(trace[0]["result"])
+    assert tool_result["reason_code"] == "APPROVED"
+
+def test_normal_request_dry_run_has_empty_trace():
+    result = call_api("Hello", {}, {})
+    assert result["metadata"]["tool_calls"] == []

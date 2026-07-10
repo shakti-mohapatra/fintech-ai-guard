@@ -1,0 +1,36 @@
+# Sprint 9 function-calling suite. See docs/sprint9-function-calling-design.md.
+#
+# Parallel to promptfooconfig.js (text-only, 3 direct providers) and
+# promptfooconfig.redteam*.yaml (adversarial generation) -- this one is a
+# plain hand-authored eval, but targets scripts/agent_target_fc.py so
+# scenarios exercise real tool calls against mock_api instead of graded
+# free text.
+description: 'Fintech-AI-Guard Function-Calling Suite (Category 11)'
+targets:
+  - id: 'file://scripts/agent_target_fc.py'
+    label: 'fintech-agent-fc'
+    config:
+      # Separate quota bucket from gemini-2.5-flash, which the main eval and
+      # redteam suites already share (20/day free tier). 8 scenarios x up to
+      # 5 turns each could otherwise burn through that shared budget fast.
+      # Confirmed with user 2026-07-09 (see design doc "Open decisions").
+      model: 'gemini-2.5-flash-lite'
+tests: ['file://scenarios-function-calling/*.yaml']
+defaultTest:
+  options:
+    # Same reasoning as promptfooconfig.js: forbidden_patterns/expected_tools/
+    # ledger_checks are YAML arrays and must reach assertions/function_calling.py
+    # whole, not cartesian-expanded into one test case per array element.
+    disableVarExpansion: true
+  assert:
+    - type: 'python'
+      value: 'file://assertions/function_calling.py'
+evaluateOptions:
+  # mock_api's ledger is a single in-process, module-level store mutated by
+  # direct Python calls (not HTTP) inside promptfoo's persistent Python
+  # worker -- concurrent test cases could interleave a reset from one
+  # scenario between another scenario's reset and its tool call. With only
+  # 8 scenarios, serializing costs seconds, not minutes; not worth building
+  # real cross-test-case locking for that trade. See design doc "Isolation
+  # & concurrency".
+  maxConcurrency: 1

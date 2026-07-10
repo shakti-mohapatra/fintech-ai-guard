@@ -71,7 +71,12 @@ Milestone** — see [github.com/shakti-mohapatra/fintech-ai-guard](https://githu
 
 ## Sprint 9 — Full Agentic Mock-API Buildout
 - [x] Expand mock_api with balance checks and multi-step transfer flows
-- [ ] Author richer function-calling scenarios against the expanded mock API — reverted 2026-07-06, see docs/antigravity-review-2026-07-06.md; needs a real design for how a tool-orchestration scenario integrates with the eval pipeline before re-attempting
+- [ ] Author richer function-calling scenarios against the expanded mock API — reverted 2026-07-06 (`docs/antigravity-review-2026-07-06.md`); design `docs/sprint9-function-calling-design.md`, implemented 2026-07-09, **not yet closed: needs one clean live `fc:smoke` run** (quota ran out mid-verification, see design doc "Implementation status")
+  - [x] 9.1 Add `transfer_tool` to `scripts/agent_target.py`'s tool list (mock_api `/transfer` existed but was never wired to the tool-calling target)
+  - [x] 9.2 Extend `agent_target.py.call_api`'s return with a `metadata.tool_calls` trace
+  - [x] 9.3 New parallel pipeline: `promptfooconfig.functioncalling.yaml` + `scripts/agent_target_fc.py` (ledger-reset wrapper, `maxConcurrency: 1`) + `scenarios-function-calling/*.yaml` + `assertions/function_calling.py` — deliberately not wedged into `scenarios/**/*.yaml`'s closed schema, same precedent as Category 10/redteam
+  - [ ] 9.4 Author 8 v1 scenarios per the design doc's table (tool-selection, sequencing, rejection-honesty, idempotency, numeric-fidelity — not re-testing authz, that's redteam's job); scenarios written, pytest 411/50/0 green, but live-verification found and fixed 2 real bugs (`vars.input`→`vars.prompt` empty-prompt bug, ambiguous-currency prompt wording) before quota ran out — **rerun `npm run fc:smoke` next session for a clean pass before checking this off**
+  - [x] 9.5 `docs/test-strategy.md`: add Category 11 (Agentic Tool-Use / Function-Calling Correctness) + coverage-matrix row
 
 ## Sprint 10 — Trend Dashboard
 - [x] Build a static dashboard (GitHub Pages or Streamlit) plotting metric trends across reports/ history

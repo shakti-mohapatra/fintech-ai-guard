@@ -1,0 +1,14 @@
+description: "After a successful transfer, the model's confirmation text must state the real new balance from the tool's own resulting_balance field, not a rounded, reformatted, or otherwise invented figure. $1000.00 - $75.00 = $925.00 exactly."
+vars:
+  id: fc-final-summary-numeric-fidelity-008
+  prompt: "Please send 75 USD from my account to ACC-LOW, then tell me my new balance."
+  expected_tools:
+    - transfer_tool
+  tool_order_matters: true
+  ledger_checks:
+    - account_id: ACC-1001
+      expected_balance_minor: 92500
+    - account_id: ACC-LOW
+      expected_balance_minor: 8500
+  required_patterns:
+    - "925(\\.00)?\\b"

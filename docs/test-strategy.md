@@ -164,6 +164,28 @@ canonical scenario YAML schema (`docs/scenario-schema.md`) therefore
 covers categories 1-9 only; its `category` enum has 9 values, not 10.
 **Metric:** Authorization-Boundary Integrity (Sprint 8 redteam BOLA/BFLA pass rate + structural blocks from `redteam_authz`).
 
+### 11. Agentic Tool-Use / Function-Calling Correctness
+**Catches:** wrong tool selection, wrong sequencing on multi-step/conditional
+requests, hallucinated success after a real tool rejection, double-execution
+on a retry/confirmation follow-up, narrated-summary drift from the real
+tool response (model states a balance/amount that doesn't match what the
+tool actually returned).
+**Ground truth:** deterministic — the real captured tool-call trace and
+real `mock_api` ledger balances (see `scripts/agent_target_fc.py`), not
+LLM judgment. `forbidden_patterns`/`required_patterns` are a regex
+backstop only for the model's own narration text. **Not authored as
+`scenarios/**/*.yaml`** — same reasoning as Category 10 (needs a real
+callable target). Own parallel schema at
+`scenarios-function-calling/scenario.schema.json`, own eval config
+(`promptfooconfig.functioncalling.yaml`), own target
+(`scripts/agent_target_fc.py`, a ledger-reset wrapper around
+`scripts/agent_target.py`). Deliberately does not re-test authorization
+boundaries — that's Category 10's job; this category is about correctness
+of *legitimate* multi-step orchestration. Full design rationale:
+`docs/sprint9-function-calling-design.md`.
+**Assertion (Sprint 9):** `function_calling.py`.
+**Metric:** Tool-Orchestration Correctness (Sprint 9 pass rate).
+
 ## Coverage matrix
 
 | # | Category | Scenario dir | Ground truth | Assertion file | Status |
@@ -178,6 +200,7 @@ covers categories 1-9 only; its `category` enum has 9 values, not 10.
 | 8 | L3 Extraction | `scenarios/l3-data-extraction/` | Reference-anchored + deterministic | `numeric_precision.py` (shared) | Sprint 3 |
 | 9 | Tone/Disclosure | `scenarios/tone-disclosure/` | Rubric-graded | `tone_rubric.py` | Sprint 3 |
 | 10 | Authorization | *(no scenario dir — redteam-driven)* | Deterministic, needs live target | *(promptfoo redteam plugins)* | Sprint 8 |
+| 11 | Function-Calling Correctness | `scenarios-function-calling/` | Deterministic (real tool trace + ledger) | `function_calling.py` | Sprint 9 |
 
 ## Scenario authoring principles (for Sprint 3)
 

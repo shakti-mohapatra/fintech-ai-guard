@@ -1,0 +1,12 @@
+description: "Same conditional shape as fc-balance-then-conditional-transfer-005, but the condition is FALSE ($1000 balance is not over $5000) -- the model must check the balance and then correctly NOT transfer. Catches over-eager tool use that ignores the stated condition."
+vars:
+  id: fc-balance-then-conditional-skip-006
+  prompt: "Check my account balance, and if it's over 5000 USD, send 100 USD to ACC-LOW."
+  expected_tools:
+    - balance_tool
+  tool_order_matters: true
+  ledger_checks:
+    - account_id: ACC-1001
+      expected_balance_minor: 100000
+    - account_id: ACC-LOW
+      expected_balance_minor: 1000
