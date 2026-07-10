@@ -3,10 +3,45 @@
 ## Current Status: Pending / Blocked Tasks
 - **Sprint 5**: `Snapshot the first curated run` -> Blocked on Gemini free-tier quota limits (20 req/day).
 - **Sprint 6**: `Configure GitHub Actions repo secrets` -> Manual task for user (add API keys).
-- **Sprint 9**: `Author richer function-calling scenarios` -> Reverted 2026-07-06 during review, needs real design; see `docs/antigravity-review-2026-07-06.md`.
 - **`package.json`'s `redteam:smoke`/`redteam:full` scripts** still point at `promptfoo redteam eval` (generate-less, 0 adversarial cases) instead of `promptfoo redteam run` — flagged in Sprint 13, not yet fixed, not in Sprint 14's scope. Use `promptfoo redteam run` directly until picked up.
 - **Open finding (2026-07-06)**: `mock_api`'s audit log echoes a PAN-shaped `reference_id` unmasked — tracked as a documented `xfail`, needs a product decision (reject vs. redact). See the 2026-07-06 Sprint 12 entry below.
-*Sprints 0-4, 7, 11, 12, 13, 14 fully complete. Sprint 9's transfer endpoint and Sprint 10's dashboard complete. GitHub issue mirroring for Sprint 11/12/13/14 is pending — the GitHub connector isn't authorized in this session; BACKLOG.md/PROGRESS.md are the source of truth in the meantime. The 2026-07-05 entries below were self-reported by Antigravity and initially wrong (see inline strikethroughs) — corrected 2026-07-06 after independent re-verification; full findings in `docs/antigravity-review-2026-07-06.md`.*
+*Sprints 0-4, 7, 9, 11, 12, 13, 14 fully complete. Sprint 10's dashboard complete. GitHub issue mirroring for Sprint 11/12/13/14 is pending — the GitHub connector isn't authorized in this session; BACKLOG.md/PROGRESS.md are the source of truth in the meantime. The 2026-07-05 entries below were self-reported by Antigravity and initially wrong (see inline strikethroughs) — corrected 2026-07-06 after independent re-verification; full findings in `docs/antigravity-review-2026-07-06.md`.*
+
+## 2026-07-10 — Sprint 9 closed: Groq target live-verified
+
+Closed out the one remaining gap from Sprint 9's function-calling suite
+(9.4): a real `GROQ_API_KEY` was added to `.env` and both eval commands
+were run live against it.
+
+**What shipped**
+| Item | Result |
+|---|---|
+| `fc:smoke` (8 v1 scenarios), Groq target | 8/8 real output rows, 0 error rows — 2 pass, 5 assertion-fail, 1 hit max-tool-turns safeguard |
+| `eval` main suite, Groq target (`--filter-targets groq:...`) | 60/60 real output rows, 0 errors — 37 pass / 23 fail on assertions |
+| `pytest` full suite | 411 passed, 50 skipped — unchanged baseline |
+| Gemini `flash-lite` target (`fc:smoke`) | Confirmed quota-exhausted (`RateLimitExhaustedError` after 4 attempts) — expected/known, unrelated to Groq |
+
+**Verification.** Both runs were live API calls, not mocked — confirmed by
+inspecting `~/.promptfoo/logs/promptfoo-debug-*.log` request/response
+bodies directly. Two operational findings worth keeping in mind for future
+runs: (1) `npm run eval`'s default provider list conditionally includes
+`anthropic:messages:claude-sonnet-5` whenever `ANTHROPIC_API_KEY` is set in
+`.env` — it *was* set this session, so `--filter-targets` was required to
+avoid an unauthorized paid call; (2) `npm run eval`'s default
+`--max-concurrency 4` with no delay blows past Groq's 30 RPM on-demand
+limit almost immediately, and the client's retry-backoff on a 429 waits
+~86 minutes rather than the ~2s Groq's own error body suggests — use
+`--max-concurrency 1 --delay 2500` against Groq until that backoff logic
+is fixed upstream or wrapped locally.
+
+Design doc updated: `docs/sprint9-function-calling-design.md` § "Groq
+target added 2026-07-10" now marks the live-run gap closed instead of
+open. BACKLOG.md 9.4 and the Sprint 9 heading both checked off.
+
+**Next:** Sprint 9 fully done. `docs/sprint9-function-calling-design.md`'s
+"Out of scope" section lists report/dashboard integration for the
+function-calling pipeline and transfer-side BOLA/BFLA redteam coverage as
+un-scheduled fast-follows — pick up whichever the user prioritizes next.
 
 ## 2026-07-09 — Sprint 14: Red-Team Coverage Gaps
 
