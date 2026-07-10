@@ -36,6 +36,15 @@ const CANDIDATE_PROVIDERS = [
     // billing gets enabled later.
     id: 'google:gemini-2.5-flash',
   },
+  {
+    envKey: 'GROQ_API_KEY',
+    // Pinned GA model (llama-3.3-70b-versatile), same reasoning as the
+    // Gemini pin above. Added 2026-07-10: Groq's free tier is far more
+    // generous than Gemini's ~20/day (1K-14.4K req/day depending on
+    // model) -- useful headroom for this suite and the redteam suites,
+    // which all draw from the same GOOGLE_API_KEY budget otherwise.
+    id: 'groq:llama-3.3-70b-versatile',
+  },
 ];
 
 const providers = CANDIDATE_PROVIDERS.filter((p) => !!process.env[p.envKey]).map((p) => p.id);

@@ -15,6 +15,16 @@ targets:
       # 5 turns each could otherwise burn through that shared budget fast.
       # Confirmed with user 2026-07-09 (see design doc "Open decisions").
       model: 'gemini-2.5-flash-lite'
+  - id: 'file://scripts/agent_target_fc.py'
+    label: 'fintech-agent-fc-groq'
+    config:
+      # Added 2026-07-10 to unblock quota-exhausted Gemini runs -- same
+      # target file, provider switch handled inside agent_target.py's
+      # call_api (config.provider). Groq's free tier (1K-14.4K req/day
+      # depending on model) is far less likely to exhaust mid-suite than
+      # flash-lite's ~20/day. Requires GROQ_API_KEY in .env.
+      provider: 'groq'
+      model: 'llama-3.3-70b-versatile'
 tests: ['file://scenarios-function-calling/*.yaml']
 defaultTest:
   options:

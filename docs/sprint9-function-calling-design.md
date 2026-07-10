@@ -254,6 +254,42 @@ this sprint as done until a clean `npm run fc:smoke` run is captured.
   expected) once quota resets, and only mark Sprint 9 done once that run
   is clean.
 
+## Groq target added 2026-07-10 (post-implementation, quota unblock)
+
+Gemini's `flash-lite` bucket was blocking a clean `fc:smoke` run (see
+"Implementation status" above). Added a second target in
+`promptfooconfig.functioncalling.yaml` (`fintech-agent-fc-groq`, model
+`llama-3.3-70b-versatile`) rather than swapping the pinned Gemini model —
+keeps the original target's trend-comparability intact, Groq is additive.
+
+`scripts/agent_target.py::call_api` now branches on `config.provider`:
+`"groq"` routes to a new `_call_groq` turn loop (plain `httpx` POST to
+Groq's OpenAI-compatible endpoint, since Groq's message/tool-call shape is
+structurally different from Gemini's `types.Content`/`Part` objects — kept
+as a fully separate function, the existing Gemini loop is untouched).
+Both loops produce the same `{"output", "metadata": {"tool_calls": trace}}`
+contract, so `agent_target_fc.py`'s ledger-snapshot wrapper and
+`assertions/function_calling.py` need no changes regardless of provider.
+
+Verified so far: module imports clean, full regression suite still
+`411 passed, 50 skipped` (unchanged baseline), and the missing-`GROQ_API_KEY`
+path returns a graceful `{"error": ...}` with zero network call (confirmed
+live, not assumed).
+
+**Live Groq run verified 2026-07-10**: real `GROQ_API_KEY` added to `.env`.
+`npm run fc:smoke` (Groq target, `fintech-agent-fc-groq`) returned real
+output rows for all 8 scenarios — 2 pass, 5 assertion-fail, 1 hit the
+max-tool-turns safeguard, zero raw `{"error": ...}` rows. `npm run eval`
+main suite (`--filter-targets groq:llama-3.3-70b-versatile`, needed to
+exclude the paid Anthropic provider that's also conditionally wired in)
+returned 60/60 real output rows, 0 errors (37 pass / 23 fail on
+assertions). Gemini's `flash-lite` bucket is confirmed still
+quota-exhausted (`RateLimitExhaustedError` after 4 attempts) — expected,
+unrelated to Groq. Note: default `npm run eval` concurrency (4) blows past
+Groq's 30 RPM on-demand limit fast; use `--max-concurrency 1 --delay 2500`
+when running the unfiltered suite against Groq to avoid a multi-hour
+retry-backoff stall.
+
 ## Out of scope for this sprint
 
 - Report/dashboard integration (`generate_report.py`, `dashboard.py`) —
